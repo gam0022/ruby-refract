@@ -306,7 +306,7 @@ http://opensource.org/licenses/mit-license.php
 		</script>
 
 		<script src="js/three.min.js"></script>
-		<script src="js/controls/FlyControls.js"></script>
+		<script src="js/controls/OrbitControls.js"></script>
 
 		<script src="js/libs/stats.min.js"></script>
 		<script src="js/libs/dat.gui.min.js"></script>
@@ -328,7 +328,7 @@ http://opensource.org/licenses/mit-license.php
 					window.open( canvas.toDataURL() );
 
 				},
-				freeCamera: false,
+				freeCamera: true,
 				resolution: '512',
 			};
 
@@ -340,6 +340,7 @@ http://opensource.org/licenses/mit-license.php
 				scene = new THREE.Scene();
 				camera = new THREE.Camera();
 				dummyCamera = new THREE.Camera();
+				camera.position.set( 0.0, 0.0, -2.0 );
 				camera.lookAt( new THREE.Vector3( 0.0, -0.3, 1.0 ) );
 
 				geometry = new THREE.PlaneBufferGeometry( 2.0, 2.0 );
@@ -364,12 +365,11 @@ http://opensource.org/licenses/mit-license.php
 				window.addEventListener( 'resize', onWindowResize );
 				document.body.appendChild( canvas );
 
-				controls = new THREE.FlyControls( camera, canvas );
+				controls = new THREE.OrbitControls( camera, canvas );
 
-				controls.autoForward = true;
-				controls.dragToLook = false;
-				controls.rollSpeed = Math.PI / 12;
-				controls.movementSpeed = 0.5;
+				controls.enableDamping = true;
+				controls.dampingFactor = 0.25;
+				//controls.enableZoom = false;
 
 				var gui = new dat.GUI();
 				gui.add( config, 'saveImage' ).name( 'Save Image' );
