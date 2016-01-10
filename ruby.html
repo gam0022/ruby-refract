@@ -228,25 +228,33 @@ http://opensource.org/licenses/mit-license.php
 
 			vec3 getRayColor( vec3 origin, vec3 ray, out vec3 p, out vec3 normal, out bool hit ) {
 
-				// marching loop
-				float dist;
-				float depth = 0.0;
-				p = origin;
+				intersect nearest, tmp;
+				nearest.hit = false;
+				nearest.distance = 100000.0;
 
-				intersect itt = rayIntersectsTriangle( origin, ray, vec3( -1.0, 0.0, 0.0 ), vec3( 0.0, 0.0, 0.0 ), vec3 (0.0, -1.0, 0.0) );
+				tmp = rayIntersectsTriangle( origin, ray, vec3( -1.0, 0.0, 0.0 ), vec3( 0.0, 0.0, 0.0 ), vec3 (0.0, -1.0, 0.0) );
+				if ( tmp.hit && tmp.distance <= nearest.distance ) {
+					nearest = tmp;
+				}
+
+				tmp = rayIntersectsTriangle( origin, ray, vec3( -1.0, 1.0, 0.0 ), vec3( 0.0, 1.0, 0.0 ), vec3 (0.0, 0.0, 0.0) );
+				if ( tmp.hit && tmp.distance <= nearest.distance ) {
+					nearest = tmp;
+				}
 
 				// hit check and calc color
 				vec3 color;
 
-				if ( itt.hit ) {
+				if ( nearest.hit ) {
 
-					normal = itt.normal;
+					normal = nearest.normal;
 					float diffuse = clamp( dot( lightDir, normal ), 0.1, 1.0 );
 					float specular = pow( clamp( dot( reflect( lightDir, normal ), ray ), 0.0, 1.0 ), 10.0 );
-					float shadow = getShadow( p + normal * OFFSET, lightDir );
+					float shadow = 1.0;
 					color = ( vec3( 1.0, 0.2, 0.2 ).rgb * diffuse + vec3( 0.8 ) * specular ) * max( 0.5, shadow );
 
 					hit = true;
+					p = nearest.position;
 
 				} else {
 
@@ -254,7 +262,7 @@ http://opensource.org/licenses/mit-license.php
 
 				}
 
-				return color - pow( clamp( 0.05 * depth, 0.0, 0.6 ), 2.0 );
+				return color;// - pow( clamp( 0.05 * depth, 0.0, 0.6 ), 2.0 );
 
 			}
 
@@ -307,6 +315,7 @@ http://opensource.org/licenses/mit-license.php
 
 		<script src="js/three.min.js"></script>
 		<script src="js/controls/OrbitControls.js"></script>
+		<script src="js/loaders/OBJLoader.js"></script>
 
 		<script src="js/libs/stats.min.js"></script>
 		<script src="js/libs/dat.gui.min.js"></script>
@@ -333,7 +342,6 @@ http://opensource.org/licenses/mit-license.php
 			};
 
 			init();
-			render();
 
 			function init() {
 
@@ -343,51 +351,80 @@ http://opensource.org/licenses/mit-license.php
 				camera.position.set( 0.0, 0.0, -2.0 );
 				camera.lookAt( new THREE.Vector3( 0.0, -0.3, 1.0 ) );
 
-				geometry = new THREE.PlaneBufferGeometry( 2.0, 2.0 );
-				material = new THREE.RawShaderMaterial( {
-					uniforms: {
-						resolution: { type: 'v2', value: new THREE.Vector2( 512, 512 ) },
-						cameraPos: { type: 'v3', value: camera.getWorldPosition() },
-						cameraDir: { type: 'v3', value: camera.getWorldDirection() },
-					},
-					vertexShader: document.getElementById( 'vertex_shader' ).textContent,
-					fragmentShader: document.getElementById( 'fragment_shader' ).textContent
-				} );
-				mesh = new THREE.Mesh( geometry, material );
-				scene.add( mesh );
+				var manager = new THREE.LoadingManager();
+				manager.onProgress = function ( item, loaded, total ) {
 
-				renderer = new THREE.WebGLRenderer();
-				//renderer.setPixelRatio( window.devicePixelRatio );
-				renderer.setSize( 512, 512 );
+					console.log( item, loaded, total );
 
-				canvas = renderer.domElement;
-				canvas.addEventListener( 'mousemove', onMouseMove );
-				window.addEventListener( 'resize', onWindowResize );
-				document.body.appendChild( canvas );
+				};
 
-				controls = new THREE.OrbitControls( camera, canvas );
-
-				controls.enableDamping = true;
-				controls.dampingFactor = 0.25;
-				//controls.enableZoom = false;
-
-				var gui = new dat.GUI();
-				gui.add( config, 'saveImage' ).name( 'Save Image' );
-				gui.add( config, 'freeCamera' ).name( 'Free Camera' );
-				gui.add( config, 'resolution', [ '256', '512', '800', 'full' ] ).name( 'Resolution' ).onChange( function( value ) {
-
-					if ( value !== 'full' ) {
-
-						canvas.width = value;
-						canvas.height = value;
-
+				var onProgress = function ( xhr ) {
+					if ( xhr.lengthComputable ) {
+						var percentComplete = xhr.loaded / xhr.total * 100;
+						console.log( Math.round(percentComplete, 2) + '% downloaded' );
 					}
-					onWindowResize();
+				};
 
-				} );
+				var onError = function ( xhr ) {
+				};
 
-				stats = new Stats();
-				document.body.appendChild( stats.domElement );
+				var loader = new THREE.OBJLoader( manager );
+				loader.load( 'models/diamond.obj', function ( object ) {
+
+					var bufferGeometry = object.children[0].geometry;
+					var diamondGeometry = new THREE.Geometry().fromBufferGeometry( bufferGeometry );
+					console.log( diamondGeometry );
+
+					geometry = new THREE.PlaneBufferGeometry( 2.0, 2.0 );
+					material = new THREE.RawShaderMaterial( {
+						uniforms: {
+							resolution: { type: 'v2', value: new THREE.Vector2( 512, 512 ) },
+							cameraPos: { type: 'v3', value: camera.getWorldPosition() },
+							cameraDir: { type: 'v3', value: camera.getWorldDirection() },
+						},
+						vertexShader: document.getElementById( 'vertex_shader' ).textContent,
+						fragmentShader: document.getElementById( 'fragment_shader' ).textContent
+					} );
+					mesh = new THREE.Mesh( geometry, material );
+					scene.add( mesh );
+
+					renderer = new THREE.WebGLRenderer();
+					//renderer.setPixelRatio( window.devicePixelRatio );
+					renderer.setSize( 512, 512 );
+
+					canvas = renderer.domElement;
+					canvas.addEventListener( 'mousemove', onMouseMove );
+					window.addEventListener( 'resize', onWindowResize );
+					document.body.appendChild( canvas );
+
+					controls = new THREE.OrbitControls( camera, canvas );
+
+					controls.enableDamping = true;
+					controls.dampingFactor = 0.25;
+					controls.enableZoom = false;
+
+					var gui = new dat.GUI();
+					gui.add( config, 'saveImage' ).name( 'Save Image' );
+					gui.add( config, 'freeCamera' ).name( 'Free Camera' );
+					gui.add( config, 'resolution', [ '256', '512', '800', 'full' ] ).name( 'Resolution' ).onChange( function( value ) {
+
+						if ( value !== 'full' ) {
+
+							canvas.width = value;
+							canvas.height = value;
+
+						}
+						onWindowResize();
+
+					} );
+
+					stats = new Stats();
+					document.body.appendChild( stats.domElement );
+
+					render();
+
+
+				}, onProgress, onError );
 
 			}
 
