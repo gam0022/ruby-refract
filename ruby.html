@@ -117,7 +117,7 @@ http://opensource.org/licenses/mit-license.php
 			            ret.hit = true;
 						ret.position = origin + ray * t;
 			            ret.distance = t;
-						ret.normal = cross( edge1, edge2 );
+						ret.normal = normalize( cross( edge1, edge2 ) );
 			        }
 			    }
 			
@@ -162,9 +162,10 @@ http://opensource.org/licenses/mit-license.php
 				if ( nearest.hit ) {
 
 					normal = nearest.normal;
-					float diffuse = clamp( dot( lightDir, normal ), 0.1, 1.0 );
-					float specular = pow( clamp( dot( reflect( lightDir, normal ), ray ), 0.0, 1.0 ), 10.0 );
-					color = ( vec3( 1.0, 0.2, 0.2 ).rgb * diffuse + vec3( 0.8 ) * specular );
+					float diffuse1 = clamp( dot( lightDir, normal ), 0.1, 1.0 );
+					float diffuse2 = clamp( dot( -lightDir, normal ), 0.1, 1.0 );
+					float specular = 0.0;//pow( clamp( dot( reflect( lightDir, normal ), ray ), 0.0, 1.0 ), 10.0 );
+					color = ( vec3( 1.0, 0.2, 0.2 ).rgb * ( diffuse1 + diffuse2 )  + vec3( 0.8 ) * specular );
 
 					hit = true;
 					p = nearest.position;
@@ -259,10 +260,10 @@ http://opensource.org/licenses/mit-license.php
 			function init() {
 
 				scene = new THREE.Scene();
-				camera = new THREE.Camera();
+				camera = new THREE.PerspectiveCamera(35, 800/600);//new THREE.Camera();
 				dummyCamera = new THREE.Camera();
-				camera.position.set( 0.0, 0.0, 1.6 );
-				camera.lookAt( new THREE.Vector3( 0.0, 0.0, 5.0 ) );
+				camera.position.set( 0.0, 0.0, 30.0 );
+				camera.lookAt( new THREE.Vector3( 0.0, 0.0, 0.0 ) );
 
 				var manager = new THREE.LoadingManager();
 				manager.onProgress = function ( item, loaded, total ) {
@@ -282,7 +283,7 @@ http://opensource.org/licenses/mit-license.php
 				};
 
 				var loader = new THREE.OBJLoader( manager );
-				loader.load( 'models/diamond3.obj', function ( object ) {
+				loader.load( 'models/asscher.obj', function ( object ) {
 
 					var bufferGeometry = object.children[0].geometry;
 					var diamondGeometry = new THREE.Geometry().fromBufferGeometry( bufferGeometry );
@@ -295,20 +296,18 @@ http://opensource.org/licenses/mit-license.php
 					var n = faces.length;
 					console.log("n: " + n);
 					for(var i = 0; i < n; i++ ) {
-						if ( i % 2 == 1) {
-							var face = faces[ i ];
-							var a = vertices[ face.a ];
-							var b = vertices[ face.c ];
-							var c = vertices[ face.b ];
+						var face = faces[ i ];
+						var a = vertices[ face.a ];
+						var b = vertices[ face.c ];
+						var c = vertices[ face.b ];
 
-							a.z = -a.z;
-							b.z = -b.z;
-							c.z = -c.z;
-							diamondGeometryGlsl += [
-								'tmp = rayIntersectsTriangle( origin, ray, vec3( ' + a.x + ', ' + a.y + ', ' + a.z + ' ), vec3( ' + b.x + ', ' + b.y + ', ' + b.z + ' ), vec3( ' + c.x + ', ' + c.y + ', ' + c.z + ' ) );',
-							'if ( tmp.hit && tmp.distance < nearest.distance ) nearest = tmp;'
-							].join("\n");
-						}
+						a.z = -a.z;
+						b.z = -b.z;
+						c.z = -c.z;
+						diamondGeometryGlsl += [
+							'tmp = rayIntersectsTriangle( origin, ray, vec3( ' + a.x + ', ' + a.y + ', ' + a.z + ' ), vec3( ' + b.x + ', ' + b.y + ', ' + b.z + ' ), vec3( ' + c.x + ', ' + c.y + ', ' + c.z + ' ) );',
+						'if ( tmp.hit && tmp.distance < nearest.distance ) nearest = tmp;'
+						].join("\n");
 					}
 
 					geometry = new THREE.PlaneBufferGeometry( 2.0, 2.0 );
