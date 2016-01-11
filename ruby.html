@@ -70,6 +70,7 @@ http://opensource.org/licenses/mit-license.php
 
 			struct intersect {
 				bool hit;
+				bool front;
 				vec3 position;
 				float distance;
 				vec3 normal;
@@ -198,11 +199,11 @@ http://opensource.org/licenses/mit-license.php
 				bool hit;
 				float alpha = 1.0;
 
-				for ( int i = 0; i < 1; i++ ) {
+				for ( int i = 0; i < 6; i++ ) {
 
 					color += alpha * getRayColor( cPos, ray, q, normal, hit );
-					alpha *= 0.3;
-					ray = normalize( reflect( ray, normal ) );
+					alpha *= 0.5;
+					ray = normalize( refract( ray, normal, 1.1 ) );
 					cPos = q + normal * OFFSET;
 
 					if ( !hit ) break;
@@ -306,7 +307,7 @@ http://opensource.org/licenses/mit-license.php
 						c.z = -c.z;
 						diamondGeometryGlsl += [
 							'tmp = rayIntersectsTriangle( origin, ray, vec3( ' + a.x + ', ' + a.y + ', ' + a.z + ' ), vec3( ' + b.x + ', ' + b.y + ', ' + b.z + ' ), vec3( ' + c.x + ', ' + c.y + ', ' + c.z + ' ) );',
-						'if ( tmp.hit && tmp.distance < nearest.distance ) nearest = tmp;'
+							'if ( tmp.hit && tmp.distance < nearest.distance ) nearest = tmp;',
 						].join("\n");
 					}
 
