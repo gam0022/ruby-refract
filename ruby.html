@@ -262,7 +262,7 @@ http://opensource.org/licenses/mit-license.php
 				scene = new THREE.Scene();
 				camera = new THREE.PerspectiveCamera(35, 800/600);//new THREE.Camera();
 				dummyCamera = new THREE.Camera();
-				camera.position.set( 0.0, 0.0, 30.0 );
+				camera.position.set( 0.0, 0.0, 15.0 );
 				camera.lookAt( new THREE.Vector3( 0.0, 0.0, 0.0 ) );
 
 				var manager = new THREE.LoadingManager();
@@ -283,7 +283,7 @@ http://opensource.org/licenses/mit-license.php
 				};
 
 				var loader = new THREE.OBJLoader( manager );
-				loader.load( 'models/asscher.obj', function ( object ) {
+				loader.load( 'models/hexagondiamond.obj', function ( object ) {
 
 					var bufferGeometry = object.children[0].geometry;
 					var diamondGeometry = new THREE.Geometry().fromBufferGeometry( bufferGeometry );
