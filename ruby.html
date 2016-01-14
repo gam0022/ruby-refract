@@ -122,6 +122,7 @@ http://opensource.org/licenses/mit-license.php
 						ret.position = origin + ray * t;
 			            ret.distance = t;
 						ret.normal = normalize( cross( edge1, edge2 ) );
+						ret.reflect = false;
 			        }
 			    }
 			
@@ -255,10 +256,19 @@ http://opensource.org/licenses/mit-license.php
 						ray = normalize( reflect( ray, nearest.normal ) );
 						cPos = nearest.position + nearest.normal * EPS;
 					} else {
-						float eta = 1.2;
+						float eta = 1.8;
 						if ( nearest.front ) eta = 1.0 / eta;
-						ray = normalize( refract( ray, nearest.normal, eta ) );
+						ray = refract( ray, nearest.normal, eta );
 						cPos = nearest.position - nearest.normal * EPS;
+
+						if ( ray == vec3( 0.0 ) ) {
+							ray = reflect( ray, nearest.normal );
+							cPos = nearest.position + nearest.normal * EPS;
+							//color = vec3(0.0, 1.0, 0.0);
+							//break;
+						}
+
+						ray = normalize( ray );
 					}
 
 
