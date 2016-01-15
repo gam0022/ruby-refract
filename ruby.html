@@ -55,7 +55,7 @@ http://opensource.org/licenses/mit-license.php
 			uniform vec3 cameraDir;
 
 			const float EPS = 0.001;
-			const vec3 lightDir = vec3( -0.48666426339228763, -0.3244428422615251, 0.8111071056538127 );
+			const vec3 lightDir = vec3( 0.48666426339228763, -0.3244428422615251, 0.8111071056538127 );
 
 
 			float det( vec3 a, vec3 b, vec3 c ) {
@@ -203,7 +203,7 @@ http://opensource.org/licenses/mit-license.php
 				plane p;
 				p.position = vec3(0.0, -1.0, 0.0);
 				p.normal = vec3(0.0, 1.0, 0.0);
-				p.color = vec3(0.9);
+				p.color = vec3(1.0);
 				rayIntersectPlane( origin, ray, p, nearest );
 
 				//DIAMOND_GEOMETRY
@@ -211,8 +211,8 @@ http://opensource.org/licenses/mit-license.php
 				if ( nearest.hit ) {
 					if ( !nearest.colorDecided ) {
 
-						float diffuse1 = clamp( dot( lightDir, nearest.normal ), 0.2, 0.6 );
-						float diffuse2 = 0.0;//clamp( dot( -lightDir, nearest.normal ), 0.1, 1.0 );
+						float diffuse1 = clamp( dot( lightDir, nearest.normal ), 0.1, 1.0 );
+						float diffuse2 = clamp( dot( -lightDir, nearest.normal ), 0.1, 1.0 );
 						//float specular1 = pow( clamp( dot( reflect( lightDir, nearest.normal ), ray ), 0.0, 1.0 ), 10.0 );
 						//float specular2 = pow( clamp( dot( reflect( -lightDir, nearest.normal ), ray ), 0.0, 1.0 ), 10.0 );
 						nearest.color = vec3( 0.3, 0.1, 0.1 ).rgb * clamp( diffuse1 + diffuse2/* + specular1 + specular2*/, 0.0, 1.0 );
@@ -220,7 +220,7 @@ http://opensource.org/licenses/mit-license.php
 					}
 				} else {
 
-					nearest.color = vec3( 0.0 );
+					nearest.color = vec3( 0.1 );
 
 				}
 
@@ -245,19 +245,19 @@ http://opensource.org/licenses/mit-license.php
 				intersect nearest;
 				float alpha = 1.0;
 
-				for ( int i = 0; i < 3; i++ ) {
+				for ( int i = 0; i < 15; i++ ) {
 
 					nearest = getRayColor( cPos, ray );
 					color += nearest.color * alpha;
 
-					alpha *= 0.3;
+					alpha *= 0.99;
 
 					if ( nearest.reflect ) {
 						ray = normalize( reflect( ray, nearest.normal ) );
 						cPos = nearest.position + nearest.normal * EPS;
 					} else {
-						float eta = 1.8;
-						if ( nearest.front ) eta = 1.0 / eta;
+						float eta = 1.1;
+						if ( !nearest.front ) eta = 1.0 / eta;
 						ray = refract( ray, nearest.normal, eta );
 						cPos = nearest.position - nearest.normal * EPS;
 
@@ -331,7 +331,7 @@ http://opensource.org/licenses/mit-license.php
 				scene = new THREE.Scene();
 				camera = new THREE.PerspectiveCamera(35, 800/600);//new THREE.Camera();
 				dummyCamera = new THREE.Camera();
-				camera.position.set( 0.0, 0.0, 2.5 );
+				camera.position.set( 0.0, 0.0, 2.5 * 1 );
 				camera.lookAt( new THREE.Vector3( 0.0, 0.0, 0.0 ) );
 
 				var manager = new THREE.LoadingManager();
@@ -352,6 +352,7 @@ http://opensource.org/licenses/mit-license.php
 				};
 
 				var loader = new THREE.OBJLoader( manager );
+				//loader.load( 'models/hexagondiamond_v2.obj', function ( object ) {
 				loader.load( 'models/a03.obj', function ( object ) {
 
 					var bufferGeometry = object.children[0].geometry;
