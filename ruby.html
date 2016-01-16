@@ -186,9 +186,10 @@ http://opensource.org/licenses/mit-license.php
 
 					if ( nearest.material == FLOOR_MATERIAL ) {
 
+						float c = 0.5;
 						float d = clamp( dot( nearest.normal, lightDir ), 0.1, 1.0 );
-						float m = mod( nearest.position.x, 2.0 );
-						float n = mod( nearest.position.z, 2.0 );
+						float m = mod( nearest.position.x / c, 2.0 );
+						float n = mod( nearest.position.z / c, 2.0 );
 						if ( ( m > 1.0 && n > 1.0 ) || ( m < 1.0 && n < 1.0 ) ) d *= 0.1;
 						nearest.color *= d * 3.0;
 
@@ -196,7 +197,7 @@ http://opensource.org/licenses/mit-license.php
 
 				} else {
 
-					nearest.color = vec3( 0.1 );
+					nearest.color = vec3( 0.2 );
 
 				}
 
