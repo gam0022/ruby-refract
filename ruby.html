@@ -315,8 +315,8 @@ http://opensource.org/licenses/mit-license.php
 				scene = new THREE.Scene();
 				camera = new THREE.PerspectiveCamera(35, 800/600);//new THREE.Camera();
 				dummyCamera = new THREE.Camera();
-				camera.position.set( 0.0, 0.0, 2.5 * 1 );
-				camera.lookAt( new THREE.Vector3( 0.0, 0.0, 0.0 ) );
+				camera.position.set( 0.0, 1.2, 0.0 );
+				camera.lookAt( new THREE.Vector3( 0.0, -1.0, 0.0 ) );
 
 				var manager = new THREE.LoadingManager();
 				manager.onProgress = function ( item, loaded, total ) {
@@ -336,8 +336,8 @@ http://opensource.org/licenses/mit-license.php
 				};
 
 				var loader = new THREE.OBJLoader( manager );
-				//loader.load( 'models/hexagondiamond_v2.obj', function ( object ) {
-				loader.load( 'models/a03.obj', function ( object ) {
+				loader.load( 'models/diamond3.obj', function ( object ) {
+				//loader.load( 'models/a03.obj', function ( object ) {
 
 					var bufferGeometry = object.children[0].geometry;
 					var diamondGeometry = new THREE.Geometry().fromBufferGeometry( bufferGeometry );
@@ -357,6 +357,10 @@ http://opensource.org/licenses/mit-license.php
 						a.z = -a.z;
 						b.z = -b.z;
 						c.z = -c.z;
+
+						a.y += -0.9;
+						b.y += -0.9;
+						c.y += -0.9;
 
 						diamondVertexes.push( a, b, c );
 					}
