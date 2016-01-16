@@ -68,92 +68,58 @@ http://opensource.org/licenses/mit-license.php
 			}
 
 			struct intersect {
-				bool hit;
-				bool front;
+				bool is_hit;
+				bool is_front;
 				vec3 position;
 				float distance;
 				vec3 normal;
-				vec3 color;
 
-				bool colorDecided;
-				bool reflect;
+				int material;
+				vec3 color;
 			};
 
-			intersect rayIntersectsTriangle( vec3 origin, vec3 ray, vec3 v0, vec3 v1, vec3 v2 ) {
-			    // 交差判定結果を
+			const int DIAMOND_MATERIAL = 0;
+			const int FLOOR_MATERIAL = 1;
 
-				intersect ret;
-				ret.hit = false;
-				ret.distance = 0.0;
-			
-			    // レイの逆方向のベクトルを得る
-			    //var invRay = ray.clone().multiplyScalar(-1);
-			    //var edge1 = (new THREE.Vector3()).subVectors(v1, v0);
-			    //var edge2 = (new THREE.Vector3()).subVectors(v2, v0);
-
+			void rayIntersectsTriangle( vec3 origin, vec3 ray, vec3 v0, vec3 v1, vec3 v2, bool is_front, inout intersect nearest ) {
+				// レイの逆方向のベクトルを得る
 				vec3 invRay = - ray;
 				vec3 edge1 = v1 - v0;
 				vec3 edge2 = v2 - v0;
-			
-			    // クラメルの公式の分母
-			    float denominator = det( edge1, edge2, invRay );
-			
-			    // レイが平面と平行でないかチェック
-			    if ( denominator <= 0.0 ) {
-			        return ret;
-			    }
-			
-			    vec3 d = origin - v0;
-			
-			    float u = det(d, edge2, invRay) / denominator;
-			    if ((u >= 0.0 ) && (u <= 1.0 )) {
-			        float v = det(edge1, d, invRay) / denominator;
-			        if ((v >= 0.0 ) && (u + v <= 1.0 )) {
-			            float t = det(edge1, edge2, d) / denominator;
-			
-			            // 距離がマイナスの場合は交差していない
-			            if ( t < 0.0 ) {
-			                return ret;
-			            }
-			
-			            // var tmp = ray.clone().multiplyScalar(t);
-			            // ret.point = (new THREE.Vector3()).addVectors(origin, tmp);
-			            ret.hit = true;
-						ret.position = origin + ray * t;
-			            ret.distance = t;
-						ret.normal = normalize( cross( edge1, edge2 ) );
-						ret.reflect = false;
-			        }
-			    }
-			
-			    return ret;
-			}
 
-			float checkeredPattern( vec3 p ) {
+				// クラメルの公式の分母
+				float denominator = det( edge1, edge2, invRay );
 
-				float u = 1.0 - floor( mod( p.x, 2.0 ) );
-				float v = 1.0 - floor( mod( p.z, 2.0 ) );
+				// レイが平面と平行でないかチェック
+				if ( denominator <= 0.0 ) return;
 
-				if ( ( u == 1.0 && v < 1.0 ) || ( u < 1.0 && v == 1.0 ) ) {
+				vec3 d = origin - v0;
 
-					return 0.2;
+				float u = det(d, edge2, invRay) / denominator;
+				if ((u >= 0.0 ) && (u <= 1.0 )) {
+					float v = det(edge1, d, invRay) / denominator;
+					if ((v >= 0.0 ) && (u + v <= 1.0 )) {
+						float t = det(edge1, edge2, d) / denominator;
 
-				} else {
+						// 距離がマイナスの場合は交差していない
+						if ( t < 0.0 ) return;
 
-					return 1.0;
-
+						if ( t < nearest.distance ) {
+							nearest.is_hit = true;
+							nearest.position = origin + ray * t;
+							nearest.distance = t;
+							nearest.normal = normalize( cross( edge1, edge2 ) );
+							nearest.material = DIAMOND_MATERIAL;
+							nearest.color = vec3( 0.3, 0.1, 0.1 );
+							nearest.is_front = is_front;
+						}
+					}
 				}
-
 			}
 
-			intersect rayIntersectsTriangleDoubleSide( vec3 origin, vec3 ray, vec3 v0, vec3 v1, vec3 v2 ) {
-				intersect front = rayIntersectsTriangle( origin, ray, v0, v1, v2 );
-				front.front = true;
-
-				intersect back  = rayIntersectsTriangle( origin, ray, v0, v2, v1 );
-				back.front = false;
-
-				if ( front.hit ) return front; else return back;
+			void rayIntersectsTriangleDoubleSide( vec3 origin, vec3 ray, vec3 v0, vec3 v1, vec3 v2, inout intersect nearest ) {
+				rayIntersectsTriangle( origin, ray, v0, v1, v2, true, nearest );
+				rayIntersectsTriangle( origin, ray, v0, v2, v1, false, nearest );
 			}
 
 			struct plane{
@@ -162,24 +128,17 @@ http://opensource.org/licenses/mit-license.php
 				vec3 color;
 			};
 
-			void rayIntersectPlane( vec3 origin, vec3 ray, plane P, inout intersect I ){
-				float d = -dot(P.position, P.normal);
-				float v = dot(ray, P.normal);
-				float t = -(dot(origin, P.normal) + d) / v;
-				if(t > 0.0 && t < I.distance){
-					I.position = origin + ray * t;
-					I.normal = P.normal;
-					float d = clamp(dot(I.normal, lightDir), 0.1, 1.0);
-					float m = mod(I.position.x, 2.0);
-					float n = mod(I.position.z, 2.0);
-					if((m > 1.0 && n > 1.0) || (m < 1.0 && n < 1.0)){
-						d *= 0.1;
-					}
-					I.color = P.color * d;
-					I.distance = t;
-					I.hit = true;
-					I.colorDecided = true;
-					I.reflect = true;
+			void rayIntersectPlane( vec3 origin, vec3 ray, plane P, inout intersect nearest ){
+				float d = -dot( P.position, P.normal );
+				float v = dot( ray, P.normal );
+				float t = -( dot( origin, P.normal ) + d ) / v;
+				if( t > 0.0 && t < nearest.distance ) {
+					nearest.is_hit = true;
+					nearest.position = origin + ray * t;
+					nearest.normal = P.normal;
+					nearest.distance = t;
+					nearest.color = vec3( 1.0 );
+					nearest.material = FLOOR_MATERIAL;
 				}
 			}
 
@@ -193,12 +152,9 @@ http://opensource.org/licenses/mit-license.php
 
 			intersect getRayColor( vec3 origin, vec3 ray) {
 
-				intersect nearest, tmp;
-				nearest.hit = false;
-				nearest.colorDecided = false;
-				nearest.reflect = false;
+				intersect nearest;
+				nearest.is_hit = false;
 				nearest.distance = 1.0e+30;
-				nearest.color = vec3( 0.0 );
 
 				plane p;
 				p.position = vec3(0.0, -1.0, 0.0);
@@ -208,16 +164,28 @@ http://opensource.org/licenses/mit-license.php
 
 				//DIAMOND_GEOMETRY
 
-				if ( nearest.hit ) {
-					if ( !nearest.colorDecided ) {
+				if ( nearest.is_hit ) {
+
+					if ( nearest.material == DIAMOND_MATERIAL ) {
 
 						float diffuse1 = clamp( dot( lightDir, nearest.normal ), 0.1, 1.0 );
 						float diffuse2 = clamp( dot( -lightDir, nearest.normal ), 0.1, 1.0 );
 						//float specular1 = pow( clamp( dot( reflect( lightDir, nearest.normal ), ray ), 0.0, 1.0 ), 10.0 );
 						//float specular2 = pow( clamp( dot( reflect( -lightDir, nearest.normal ), ray ), 0.0, 1.0 ), 10.0 );
-						nearest.color = vec3( 0.3, 0.1, 0.1 ).rgb * clamp( diffuse1 + diffuse2/* + specular1 + specular2*/, 0.0, 1.0 );
+						nearest.color *= clamp( diffuse1 + diffuse2/* + specular1 + specular2*/, 0.0, 1.0 );
 
 					}
+
+					if ( nearest.material == FLOOR_MATERIAL ) {
+
+						float d = clamp( dot( nearest.normal, lightDir ), 0.1, 1.0 );
+						float m = mod( nearest.position.x, 2.0 );
+						float n = mod( nearest.position.z, 2.0 );
+						if ( ( m > 1.0 && n > 1.0 ) || ( m < 1.0 && n < 1.0 ) ) d *= 0.1;
+						nearest.color *= d;
+
+					}
+
 				} else {
 
 					nearest.color = vec3( 0.1 );
@@ -245,34 +213,40 @@ http://opensource.org/licenses/mit-license.php
 				intersect nearest;
 				float alpha = 1.0;
 
-				for ( int i = 0; i < 15; i++ ) {
+				for ( int i = 0; i < 10; i++ ) {
 
 					nearest = getRayColor( cPos, ray );
 					color += nearest.color * alpha;
 
 					alpha *= 0.99;
 
-					if ( nearest.reflect ) {
-						ray = normalize( reflect( ray, nearest.normal ) );
-						cPos = nearest.position + nearest.normal * EPS;
-					} else {
+					if ( nearest.material == DIAMOND_MATERIAL ) {
+
 						float eta = 1.1;
-						if ( !nearest.front ) eta = 1.0 / eta;
+						if ( !nearest.is_front ) eta = 1.0 / eta;
 						ray = refract( ray, nearest.normal, eta );
 						cPos = nearest.position - nearest.normal * EPS;
 
 						if ( ray == vec3( 0.0 ) ) {
+
 							ray = reflect( ray, nearest.normal );
 							cPos = nearest.position + nearest.normal * EPS;
-							//color = vec3(0.0, 1.0, 0.0);
-							//break;
+
 						}
 
-						ray = normalize( ray );
+
 					}
 
+					if ( nearest.material == FLOOR_MATERIAL ) {
 
-					if ( !nearest.hit ) break;
+						ray = reflect( ray, nearest.normal );
+						cPos = nearest.position + nearest.normal * EPS;
+
+					}
+
+					ray = normalize( ray );
+
+					if ( !nearest.is_hit ) break;
 
 				}
 
@@ -375,8 +349,7 @@ http://opensource.org/licenses/mit-license.php
 						b.z = -b.z;
 						c.z = -c.z;
 						diamondGeometryGlsl += [
-							'tmp = rayIntersectsTriangleDoubleSide( origin, ray, vec3( ' + a.x + ', ' + a.y + ', ' + a.z + ' ), vec3( ' + b.x + ', ' + b.y + ', ' + b.z + ' ), vec3( ' + c.x + ', ' + c.y + ', ' + c.z + ' ) );',
-							'if ( tmp.hit && tmp.distance < nearest.distance ) nearest = tmp;',
+							'rayIntersectsTriangleDoubleSide( origin, ray, vec3( ' + a.x + ', ' + a.y + ', ' + a.z + ' ), vec3( ' + b.x + ', ' + b.y + ', ' + b.z + ' ), vec3( ' + c.x + ', ' + c.y + ', ' + c.z + ' ), nearest );',
 						].join("\n");
 					}
 
