@@ -118,7 +118,7 @@ http://opensource.org/licenses/mit-license.php
 							nearest.distance = t;
 							nearest.normal = normalize( cross( edge1, edge2 ) );
 							nearest.material = DIAMOND_MATERIAL;
-							nearest.color = vec3( 0.2, 0.01, 0.01 );
+							nearest.color = vec3( 0.3, 0.01, 0.01 );
 							nearest.is_front = is_front;
 						}
 					}
@@ -187,13 +187,14 @@ http://opensource.org/licenses/mit-license.php
 
 					}
 
+					nearest.color -= clamp( 0.05 * nearest.distance, 0.0, 0.3 );
+
 				} else {
 
-					nearest.color = vec3( 0.2 );
+					nearest.color = vec3( 0.0 );
 
 				}
 
-				nearest.color -= pow( clamp( 0.01 * nearest.distance, 0.0, 0.5 ), 2.0 );
 
 				return nearest;
 
@@ -219,14 +220,14 @@ http://opensource.org/licenses/mit-license.php
 				for ( int i = 0; i < 10; i++ ) {
 
 					nearest = getRayColor( cPos, ray );
-					color += nearest.color * alpha;
+					color += clamp( nearest.color, 0.0, 1.0 ) * alpha;
 
 					alpha *= 0.99;
 
 					if ( nearest.material == DIAMOND_MATERIAL ) {
 
-						float eta = 1.2;
-						if ( !nearest.is_front ) eta = 1.0 / eta;
+						float eta = 1.42;
+						if ( nearest.is_front ) eta = 1.0 / eta;
 						ray = refract( ray, nearest.normal, eta );
 						cPos = nearest.position - nearest.normal * EPS;
 
@@ -342,20 +343,18 @@ http://opensource.org/licenses/mit-license.php
 					var diamondVertexes = [];
 
 					for(var i = 0; i < diamondVertexCount; i++ ) {
+
 						var face = faces[ i ];
 						var a = vertices[ face.a ];
-						var b = vertices[ face.c ];
-						var c = vertices[ face.b ];
-
-						a.z = -a.z;
-						b.z = -b.z;
-						c.z = -c.z;
+						var b = vertices[ face.b ];
+						var c = vertices[ face.c ];
 
 						a.y += -0.9;
 						b.y += -0.9;
 						c.y += -0.9;
 
 						diamondVertexes.push( a, b, c );
+
 					}
 
 					geometry = new THREE.PlaneBufferGeometry( 2.0, 2.0 );
