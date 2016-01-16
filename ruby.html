@@ -54,6 +54,8 @@ http://opensource.org/licenses/mit-license.php
 			uniform vec3 cameraPos;
 			uniform vec3 cameraDir;
 
+			uniform vec3 diamondVertexes[ diamondVertexCount * 3];
+
 			const float EPS = 0.001;
 			const vec3 lightDir = vec3( 0.48666426339228763, -0.3244428422615251, 0.8111071056538127 );
 
@@ -117,11 +119,6 @@ http://opensource.org/licenses/mit-license.php
 				}
 			}
 
-			void rayIntersectsTriangleDoubleSide( vec3 origin, vec3 ray, vec3 v0, vec3 v1, vec3 v2, inout intersect nearest ) {
-				rayIntersectsTriangle( origin, ray, v0, v1, v2, true, nearest );
-				rayIntersectsTriangle( origin, ray, v0, v2, v1, false, nearest );
-			}
-
 			struct plane{
 				vec3 position;
 				vec3 normal;
@@ -156,13 +153,24 @@ http://opensource.org/licenses/mit-license.php
 				nearest.is_hit = false;
 				nearest.distance = 1.0e+30;
 
+				// plane
 				plane p;
 				p.position = vec3(0.0, -1.0, 0.0);
 				p.normal = vec3(0.0, 1.0, 0.0);
 				p.color = vec3(1.0);
 				rayIntersectPlane( origin, ray, p, nearest );
 
-				//DIAMOND_GEOMETRY
+				// diamond
+				for( int i = 0; i < diamondVertexCount; i++ ) {
+
+					vec3 v0 = diamondVertexes[ i * 3 ];
+					vec3 v1 = diamondVertexes[ i * 3 + 1 ];
+					vec3 v2 = diamondVertexes[ i * 3 + 2 ];
+
+					rayIntersectsTriangle( origin, ray, v0, v1, v2, true, nearest );
+					rayIntersectsTriangle( origin, ray, v0, v2, v1, false, nearest );
+
+				}
 
 				if ( nearest.is_hit ) {
 
@@ -333,15 +341,14 @@ http://opensource.org/licenses/mit-license.php
 
 					var bufferGeometry = object.children[0].geometry;
 					var diamondGeometry = new THREE.Geometry().fromBufferGeometry( bufferGeometry );
-					console.log( diamondGeometry );
-
-					var diamondGeometryGlsl = "";
-
 					var faces = diamondGeometry.faces;
 					var vertices = diamondGeometry.vertices;
-					var n = faces.length;
-					console.log("n: " + n);
-					for(var i = 0; i < n; i++ ) {
+
+					var diamondVertexCount = faces.length;
+					console.log( "diamondVertexCount: " + diamondVertexCount )
+					var diamondVertexes = [];
+
+					for(var i = 0; i < diamondVertexCount; i++ ) {
 						var face = faces[ i ];
 						var a = vertices[ face.a ];
 						var b = vertices[ face.c ];
@@ -350,9 +357,8 @@ http://opensource.org/licenses/mit-license.php
 						a.z = -a.z;
 						b.z = -b.z;
 						c.z = -c.z;
-						diamondGeometryGlsl += [
-							'rayIntersectsTriangleDoubleSide( origin, ray, vec3( ' + a.x + ', ' + a.y + ', ' + a.z + ' ), vec3( ' + b.x + ', ' + b.y + ', ' + b.z + ' ), vec3( ' + c.x + ', ' + c.y + ', ' + c.z + ' ), nearest );',
-						].join("\n");
+
+						diamondVertexes.push( a, b, c );
 					}
 
 					geometry = new THREE.PlaneBufferGeometry( 2.0, 2.0 );
@@ -361,9 +367,10 @@ http://opensource.org/licenses/mit-license.php
 							resolution: { type: 'v2', value: new THREE.Vector2( 512, 512 ) },
 							cameraPos: { type: 'v3', value: camera.getWorldPosition() },
 							cameraDir: { type: 'v3', value: camera.getWorldDirection() },
+							diamondVertexes: { type: 'v3v', value: diamondVertexes },
 						},
 						vertexShader: document.getElementById( 'vertex_shader' ).textContent,
-						fragmentShader: document.getElementById( 'fragment_shader' ).textContent.replace( '//DIAMOND_GEOMETRY', diamondGeometryGlsl )
+						fragmentShader: document.getElementById( 'fragment_shader' ).textContent.replace( /diamondVertexCount/g, diamondVertexCount ),
 					} );
 					mesh = new THREE.Mesh( geometry, material );
 					scene.add( mesh );
