@@ -55,6 +55,7 @@ http://opensource.org/licenses/mit-license.php
 			uniform vec3 cameraDir;
 
 			uniform vec3 diamondVertexes[ diamondVertexCount * 3 ];
+			uniform float refractiveIndex;
 
 			const float EPS = 0.001;
 			const vec3 lightDir = vec3( 0.48666426339228763, -0.3244428422615251, 0.8111071056538127 );
@@ -226,7 +227,7 @@ http://opensource.org/licenses/mit-license.php
 
 					if ( nearest.material == DIAMOND_MATERIAL ) {
 
-						float eta = 1.42;
+						float eta = refractiveIndex;
 						if ( nearest.is_front ) eta = 1.0 / eta;
 						ray = refract( ray, nearest.normal, eta );
 						cPos = nearest.position - nearest.normal * EPS;
@@ -300,6 +301,7 @@ http://opensource.org/licenses/mit-license.php
 				},
 				freeCamera: true,
 				resolution: '256',
+				refractiveIndex: 1.42,
 			};
 
 			init();
@@ -364,6 +366,7 @@ http://opensource.org/licenses/mit-license.php
 							cameraPos: { type: 'v3', value: camera.getWorldPosition() },
 							cameraDir: { type: 'v3', value: camera.getWorldDirection() },
 							diamondVertexes: { type: 'v3v', value: diamondVertexes },
+							refractiveIndex: { type: 'f', value: config.refractiveIndex },
 						},
 						vertexShader: document.getElementById( 'vertex_shader' ).textContent,
 						fragmentShader: document.getElementById( 'fragment_shader' ).textContent.replace( /diamondVertexCount/g, diamondVertexCount ),
@@ -389,6 +392,7 @@ http://opensource.org/licenses/mit-license.php
 					var gui = new dat.GUI();
 					gui.add( config, 'saveImage' ).name( 'Save Image' );
 					gui.add( config, 'freeCamera' ).name( 'Free Camera' );
+					gui.add( config, 'refractiveIndex', 0.0, 3.0 ).name( 'Refractive Index' );
 					gui.add( config, 'resolution', [ '256', '512', '800', 'full' ] ).name( 'Resolution' ).onChange( function( value ) {
 
 						if ( value !== 'full' ) {
@@ -431,6 +435,7 @@ http://opensource.org/licenses/mit-license.php
 				material.uniforms.resolution.value = new THREE.Vector2( canvas.width, canvas.height );
 				material.uniforms.cameraPos.value = camera.getWorldPosition();
 				material.uniforms.cameraDir.value = camera.getWorldDirection();
+				material.uniforms.refractiveIndex.value = config.refractiveIndex;
 				renderer.render( scene, dummyCamera );
 
 				stats.end();
