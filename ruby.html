@@ -182,7 +182,7 @@ http://opensource.org/licenses/mit-license.php
 						float m = mod( nearest.position.x, 2.0 );
 						float n = mod( nearest.position.z, 2.0 );
 						if ( ( m > 1.0 && n > 1.0 ) || ( m < 1.0 && n < 1.0 ) ) d *= 0.1;
-						nearest.color *= d;
+						nearest.color *= d * 3.0;
 
 					}
 
@@ -192,7 +192,9 @@ http://opensource.org/licenses/mit-license.php
 
 				}
 
-				return nearest;// - pow( clamp( 0.05 * depth, 0.0, 0.6 ), 2.0 );
+				nearest.color -= pow( clamp( 0.01 * nearest.distance, 0.0, 0.5 ), 2.0 );
+
+				return nearest;
 
 			}
 
@@ -222,7 +224,7 @@ http://opensource.org/licenses/mit-license.php
 
 					if ( nearest.material == DIAMOND_MATERIAL ) {
 
-						float eta = 1.1;
+						float eta = 1.2;
 						if ( !nearest.is_front ) eta = 1.0 / eta;
 						ray = refract( ray, nearest.normal, eta );
 						cPos = nearest.position - nearest.normal * EPS;
