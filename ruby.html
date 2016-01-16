@@ -305,7 +305,7 @@ http://opensource.org/licenses/mit-license.php
 
 				},
 				freeCamera: true,
-				resolution: '512',
+				resolution: '256',
 			};
 
 			init();
@@ -368,7 +368,7 @@ http://opensource.org/licenses/mit-license.php
 					geometry = new THREE.PlaneBufferGeometry( 2.0, 2.0 );
 					material = new THREE.RawShaderMaterial( {
 						uniforms: {
-							resolution: { type: 'v2', value: new THREE.Vector2( 512, 512 ) },
+							resolution: { type: 'v2', value: new THREE.Vector2( config.resolution, config.resolution ) },
 							cameraPos: { type: 'v3', value: camera.getWorldPosition() },
 							cameraDir: { type: 'v3', value: camera.getWorldDirection() },
 							diamondVertexes: { type: 'v3v', value: diamondVertexes },
@@ -381,7 +381,7 @@ http://opensource.org/licenses/mit-license.php
 
 					renderer = new THREE.WebGLRenderer();
 					//renderer.setPixelRatio( window.devicePixelRatio );
-					renderer.setSize( 512, 512 );
+					renderer.setSize( config.resolution, config.resolution );
 
 					canvas = renderer.domElement;
 					canvas.addEventListener( 'mousemove', onMouseMove );
