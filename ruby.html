@@ -179,16 +179,15 @@ http://opensource.org/licenses/mit-license.php
 
 					if ( nearest.material == FLOOR_MATERIAL ) {
 
-						float c = 0.5;
 						float d = clamp( dot( nearest.normal, lightDir ), 0.1, 1.0 );
-						float m = mod( nearest.position.x / c, 2.0 );
-						float n = mod( nearest.position.z / c, 2.0 );
+						float m = mod( nearest.position.x, 2.0 );
+						float n = mod( nearest.position.z, 2.0 );
 						if ( ( m > 1.0 && n > 1.0 ) || ( m < 1.0 && n < 1.0 ) ) d *= 0.1;
 						nearest.color *= d * 3.0;
 
 					}
 
-					nearest.color -= clamp( 0.05 * nearest.distance, 0.0, 0.3 );
+					nearest.color -= clamp( 0.025 * nearest.distance, 0.0, 0.3 );
 
 				} else {
 
@@ -311,7 +310,7 @@ http://opensource.org/licenses/mit-license.php
 				scene = new THREE.Scene();
 
 				camera = new THREE.PerspectiveCamera(35, 800/600);//new THREE.Camera();
-				camera.position.set( 0.0, 1.5, 0.0 );
+				camera.position.set( 0.0, 3.0, 0.0 );
 				camera.lookAt( new THREE.Vector3( 0, 2, 2 ) );
 
 				dummyCamera = new THREE.Camera();
