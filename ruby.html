@@ -333,8 +333,8 @@ http://opensource.org/licenses/mit-license.php
 				};
 
 				var loader = new THREE.OBJLoader( manager );
-				//loader.load( 'models/diamond_mod.obj', function ( object ) {
-				loader.load( 'models/a03_mod.obj', function ( object ) {
+				loader.load( 'models/diamond_mod.obj', function ( object ) {
+				//loader.load( 'models/a03_mod.obj', function ( object ) {
 
 					var bufferGeometry = object.children[0].geometry;
 					var diamondGeometry = new THREE.Geometry().fromBufferGeometry( bufferGeometry );
