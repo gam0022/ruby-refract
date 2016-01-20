@@ -100,7 +100,7 @@ http://opensource.org/licenses/mit-license.php
 				float denominator = det( edge1, edge2, invRay );
 
 				// レイが平面と平行でないかチェック
-				if ( denominator <= 0.0 ) return;
+				if ( denominator == 0.0 ) return;
 
 				vec3 d = origin - v0;
 
@@ -120,7 +120,10 @@ http://opensource.org/licenses/mit-license.php
 							nearest.normal = normalize( cross( edge1, edge2 ) );
 							nearest.material = DIAMOND_MATERIAL;
 							nearest.color = vec3( 0.3, 0.01, 0.01 );
-							nearest.is_front = is_front;
+							nearest.is_front = denominator > 0.0;
+							if ( !nearest.is_front ) {
+								nearest.normal = -nearest.normal;
+							}
 						}
 					}
 				}
@@ -161,7 +164,6 @@ http://opensource.org/licenses/mit-license.php
 					vec3 v2 = diamondVertexes[ i * 3 + 2 ];
 
 					rayIntersectsTriangle( origin, ray, v0, v1, v2, true, nearest );
-					rayIntersectsTriangle( origin, ray, v0, v2, v1, false, nearest );
 
 				}
 
@@ -257,6 +259,7 @@ http://opensource.org/licenses/mit-license.php
 				color = clamp( color, 0.0, 1.0 );
 
 				gl_FragColor = vec4( pow( color, vec3( 1.0 / 2.2 ) ), 1.0 );
+				//gl_FragColor = vec4( color, 1.0 );
 
 			}
 
