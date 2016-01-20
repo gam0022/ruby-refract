@@ -105,17 +105,24 @@ http://opensource.org/licenses/mit-license.php
 				vec3 d = origin - v0;
 
 				float u = det(d, edge2, invRay) / denominator;
-				float v = det(edge1, d, invRay) / denominator;
-				float t = det(edge1, edge2, d) / denominator;
+				if ((u >= 0.0 ) && (u <= 1.0 )) {
+					float v = det(edge1, d, invRay) / denominator;
+					if ((v >= 0.0 ) && (u + v <= 1.0 )) {
+						float t = det(edge1, edge2, d) / denominator;
 
-				if ( (u >= 0.0 ) && (u <= 1.0 ) && (v >= 0.0 ) && (u + v <= 1.0 ) && t >= 0.0 && t < nearest.distance ) {
-					nearest.is_hit = true;
-					nearest.position = origin + ray * t;
-					nearest.distance = t;
-					nearest.normal = normalize( cross( edge1, edge2 ) ) * sign( denominator );
-					nearest.material = DIAMOND_MATERIAL;
-					nearest.color = vec3( 0.3, 0.01, 0.01 );
-					nearest.is_front = denominator > 0.0;
+						// 距離がマイナスの場合は交差していない
+						if ( t < 0.0 ) return;
+
+						if ( t < nearest.distance ) {
+							nearest.is_hit = true;
+							nearest.position = origin + ray * t;
+							nearest.distance = t;
+							nearest.normal = normalize( cross( edge1, edge2 ) ) * sign( denominator );
+							nearest.material = DIAMOND_MATERIAL;
+							nearest.color = vec3( 0.3, 0.01, 0.01 );
+							nearest.is_front = denominator > 0.0;
+						}
+					}
 				}
 			}
 
