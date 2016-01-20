@@ -117,13 +117,10 @@ http://opensource.org/licenses/mit-license.php
 							nearest.is_hit = true;
 							nearest.position = origin + ray * t;
 							nearest.distance = t;
-							nearest.normal = normalize( cross( edge1, edge2 ) );
+							nearest.normal = normalize( cross( edge1, edge2 ) ) * sign( denominator );
 							nearest.material = DIAMOND_MATERIAL;
 							nearest.color = vec3( 0.3, 0.01, 0.01 );
 							nearest.is_front = denominator > 0.0;
-							if ( !nearest.is_front ) {
-								nearest.normal = -nearest.normal;
-							}
 						}
 					}
 				}
