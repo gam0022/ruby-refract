@@ -92,35 +92,30 @@ http://opensource.org/licenses/mit-license.php
 
 			void rayIntersectsTriangle( vec3 origin, vec3 ray, vec3 v0, vec3 v1, vec3 v2, inout Intersect nearest ) {
 				// レイの逆方向のベクトルを得る
-				vec3 invRay = - ray;
+				vec3 invRay = -ray;
 				vec3 edge1 = v1 - v0;
 				vec3 edge2 = v2 - v0;
 
 				// クラメルの公式の分母
-				float denominator = det( edge1, edge2, invRay );
-
-				// レイが平面と平行でないかチェック
-				if ( denominator == 0.0 ) return;
+				float invDenominator = 1.0 / det( edge1, edge2, invRay );
 
 				vec3 d = origin - v0;
 
-				float u = det(d, edge2, invRay) / denominator;
-				if ((u >= 0.0 ) && (u <= 1.0 )) {
-					float v = det(edge1, d, invRay) / denominator;
-					if ((v >= 0.0 ) && (u + v <= 1.0 )) {
-						float t = det(edge1, edge2, d) / denominator;
+				float u = det( d, edge2, invRay ) * invDenominator;
+				if ( u >= 0.0 && u <= 1.0 ) {
 
-						// 距離がマイナスの場合は交差していない
-						if ( t < 0.0 ) return;
+					float v = det( edge1, d, invRay ) * invDenominator;
+					if ( v >= 0.0 && u + v <= 1.0 ) {
 
-						if ( t < nearest.distance ) {
+						float t = det( edge1, edge2, d ) * invDenominator;
+						if ( t >= 0.0 && t < nearest.distance ) {
 							nearest.is_hit = true;
 							nearest.position = origin + ray * t;
 							nearest.distance = t;
-							nearest.normal = normalize( cross( edge1, edge2 ) ) * sign( denominator );
+							nearest.normal = normalize( cross( edge1, edge2 ) ) * sign( invDenominator );
 							nearest.material = DIAMOND_MATERIAL;
 							nearest.color = vec3( 0.3, 0.01, 0.01 );
-							nearest.is_front = denominator > 0.0;
+							nearest.is_front = invDenominator > 0.0;
 						}
 					}
 				}
