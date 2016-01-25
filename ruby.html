@@ -127,24 +127,29 @@ http://opensource.org/licenses/mit-license.php
 								nearest.material = DIAMOND_MATERIAL;
 								nearest.color = vec3( 0.3, 0.01, 0.01 );
 								nearest.is_front = invDenominator > 0.0;
+
 							}
 						}
 					}
 				}
 			}
 
-			void rayIntersectPlane( vec3 origin, vec3 ray, Plane plane, inout Intersect nearest ){
+			void rayIntersectPlane( vec3 origin, vec3 ray, Plane plane, inout Intersect nearest ) {
+
 				float d = -dot( plane.position, plane.normal );
 				float v = dot( ray, plane.normal );
 				float t = -( dot( origin, plane.normal ) + d ) / v;
 				if( t > 0.0 && t < nearest.distance ) {
+
 					nearest.is_hit = true;
 					nearest.position = origin + ray * t;
 					nearest.normal = plane.normal;
 					nearest.distance = t;
 					nearest.color = vec3( 1.0 );
 					nearest.material = FLOOR_MATERIAL;
+
 				}
+
 			}
 
 			Intersect getRayColor( vec3 origin, vec3 ray) {
