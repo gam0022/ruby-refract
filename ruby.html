@@ -50,16 +50,17 @@ http://opensource.org/licenses/mit-license.php
 
 			precision highp float;
 
-			uniform vec2 resolution;
-			uniform vec3 cameraPos;
-			uniform vec3 cameraDir;
-
 			//uniform vec3 diamondVertexes[ diamondFaceCount * 3 ];
 			uniform sampler2D diamondVertexTexture;
 			//uniform int diamondFaceCount;
 			uniform int textureWidth;
 
+			uniform vec3 cameraPos;
+			uniform vec3 cameraDir;
+
+			uniform bool gammaCorrection;
 			uniform float refractiveIndex;
+			uniform vec2 resolution;
 
 			const float EPS = 0.001;
 			const vec3 lightDir = vec3( 0.48666426339228763, -0.3244428422615251, 0.8111071056538127 );
@@ -268,8 +269,15 @@ http://opensource.org/licenses/mit-license.php
 
 				color = clamp( color, 0.0, 1.0 );
 
-				gl_FragColor = vec4( pow( color, vec3( 1.0 / 2.2 ) ), 1.0 );
-				//gl_FragColor = vec4( color, 1.0 );
+				if ( gammaCorrection ) {
+
+					gl_FragColor = vec4( pow( color, vec3( 1.0 / 2.2 ) ), 1.0 );
+
+				} else {
+
+					gl_FragColor = vec4( color, 1.0 );
+
+				}
 
 			}
 
@@ -312,8 +320,9 @@ http://opensource.org/licenses/mit-license.php
 
 				},
 				freeCamera: true,
-				resolution: '256',
+				gammaCorrection: false,
 				refractiveIndex: 1.42,
+				resolution: '256',
 			};
 
 			init();
@@ -395,15 +404,16 @@ http://opensource.org/licenses/mit-license.php
 					geometry = new THREE.PlaneBufferGeometry( 2.0, 2.0 );
 					material = new THREE.RawShaderMaterial( {
 						uniforms: {
-							resolution: { type: 'v2', value: new THREE.Vector2( config.resolution, config.resolution ) },
 							cameraPos: { type: 'v3', value: camera.getWorldPosition() },
 							cameraDir: { type: 'v3', value: camera.getWorldDirection() },
+
+							gammaCorrection: { type: 'i', value: config.gammaCorrection },
+							refractiveIndex: { type: 'f', value: config.refractiveIndex },
+							resolution: { type: 'v2', value: new THREE.Vector2( config.resolution, config.resolution ) },
 
 							//diamondFaceCount: { type: 'i', value: diamondFaceCount },
 							textureWidth: { type: 'i', value: width },
 							diamondVertexTexture: { type: 't', value: diamondVertexTexture },
-
-							refractiveIndex: { type: 'f', value: config.refractiveIndex },
 						},
 						vertexShader: document.getElementById( 'vertex_shader' ).textContent,
 						fragmentShader: document.getElementById( 'fragment_shader' ).textContent.replace( /diamondFaceCount/g, diamondFaceCount ),
@@ -436,6 +446,7 @@ http://opensource.org/licenses/mit-license.php
 					var gui = new dat.GUI();
 					gui.add( config, 'saveImage' ).name( 'Save Image' );
 					gui.add( config, 'freeCamera' ).name( 'Free Camera' );
+					gui.add( config, 'gammaCorrection' ).name( 'Gamma Correction' );
 					gui.add( config, 'refractiveIndex', 0.0, 3.0 ).name( 'Refractive Index' );
 					gui.add( config, 'resolution', [ '256', '512', '800', 'full' ] ).name( 'Resolution' ).onChange( function( value ) {
 
@@ -479,6 +490,7 @@ http://opensource.org/licenses/mit-license.php
 				material.uniforms.resolution.value = new THREE.Vector2( canvas.width, canvas.height );
 				material.uniforms.cameraPos.value = camera.getWorldPosition();
 				material.uniforms.cameraDir.value = camera.getWorldDirection();
+				material.uniforms.gammaCorrection.value = config.gammaCorrection;
 				material.uniforms.refractiveIndex.value = config.refractiveIndex;
 				renderer.render( scene, dummyCamera );
 
