@@ -160,9 +160,9 @@ http://opensource.org/licenses/mit-license.php
 					//vec3 v1 = diamondVertexes[ i * 3 + 1 ];
 					//vec3 v2 = diamondVertexes[ i * 3 + 2 ];
 
-					vec3 v0 = texture2D( diamondVertexTexture, vec2( mod( float( i * 3   ) , float( textureWidth ) ) / float(textureWidth), float( i * 3     ) / float( textureWidth * textureWidth ) ) ).xyz;
-					vec3 v1 = texture2D( diamondVertexTexture, vec2( mod( float( i * 3 + 1), float( textureWidth ) ) / float(textureWidth), float( i * 3 + 1 ) / float( textureWidth * textureWidth ) ) ).xyz;
-					vec3 v2 = texture2D( diamondVertexTexture, vec2( mod( float( i * 3 + 2), float( textureWidth ) ) / float(textureWidth), float( i * 3 + 2 ) / float( textureWidth * textureWidth ) ) ).xyz;
+					vec3 v0 = texture2D( diamondVertexTexture, vec2( mod( float( i * 4     ), float( textureWidth ) ) / float(textureWidth), float( i * 4     ) / float( textureWidth * textureWidth ) ) ).xyz;
+					vec3 v1 = texture2D( diamondVertexTexture, vec2( mod( float( i * 4 + 1 ), float( textureWidth ) ) / float(textureWidth), float( i * 4 + 1 ) / float( textureWidth * textureWidth ) ) ).xyz;
+					vec3 v2 = texture2D( diamondVertexTexture, vec2( mod( float( i * 4 + 2 ), float( textureWidth ) ) / float(textureWidth), float( i * 4 + 2 ) / float( textureWidth * textureWidth ) ) ).xyz;
 
 					rayIntersectsTriangle( origin, ray, v0, v1, v2, nearest );
 
@@ -363,7 +363,7 @@ http://opensource.org/licenses/mit-license.php
 
 					var width = 32;
 					var height = 32;
-					var diamondVertexes = new Float32Array( width * height * 3 );
+					var diamondVertexes = new Float32Array( width * height * 4 );
 
 					for ( var i = 0; i < diamondFaceCount; i++ ) {
 						var face = faces[ i ];
@@ -371,22 +371,27 @@ http://opensource.org/licenses/mit-license.php
 						var b = vertices[ face.b ];
 						var c = vertices[ face.c ];
 
-						diamondVertexes[ i * 3     ]  = a.x;
-						diamondVertexes[ i * 3 + 1 ]  = a.y;
-						diamondVertexes[ i * 3 + 2 ]  = a.z;
-						diamondVertexes[ i * 3 + 3 ]  = b.x;
-						diamondVertexes[ i * 3 + 4 ]  = b.y;
-						diamondVertexes[ i * 3 + 5 ]  = b.z;
-						diamondVertexes[ i * 3 + 6 ]  = c.x;
-						diamondVertexes[ i * 3 + 7 ]  = c.y;
-						diamondVertexes[ i * 3 + 8 ]  = c.z;
+						diamondVertexes[ i * 4     ]  = a.x;
+						diamondVertexes[ i * 4 + 1 ]  = a.y;
+						diamondVertexes[ i * 4 + 2 ]  = a.z;
+						diamondVertexes[ i * 4 + 3 ]  = 1.0;
+
+						diamondVertexes[ ( i + 1 ) * 4     ]  = b.x;
+						diamondVertexes[ ( i + 1 ) * 4 + 1 ]  = b.y;
+						diamondVertexes[ ( i + 1 ) * 4 + 2 ]  = b.z;
+						diamondVertexes[ ( i + 1 ) * 4 + 3 ]  = 1.0;
+
+						diamondVertexes[ ( i + 2 ) * 4     ]  = c.x;
+						diamondVertexes[ ( i + 2 ) * 4 + 1 ]  = c.y;
+						diamondVertexes[ ( i + 2 ) * 4 + 2 ]  = c.z;
+						diamondVertexes[ ( i + 2 ) * 4 + 3 ]  = 1.0;
 					}
 
 					var diamondVertexTexture = new THREE.DataTexture(
 						diamondVertexes,
 						width,
 						height,
-						THREE.RGBFormat,
+						THREE.RGBAFormat,
 						THREE.FloatType
 					);
 					diamondVertexTexture.needsUpdate = true;
