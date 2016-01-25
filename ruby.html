@@ -328,7 +328,7 @@ http://opensource.org/licenses/mit-license.php
 					window.open( canvas.toDataURL() );
 
 				},
-				freeCamera: false,
+				freeCamera: true,
 				gammaCorrection: false,
 				refractiveIndex: 1.42,
 				resolution: '256',
@@ -341,8 +341,8 @@ http://opensource.org/licenses/mit-license.php
 				scene = new THREE.Scene();
 
 				camera = new THREE.PerspectiveCamera(35, 800/600);//new THREE.Camera();
-				camera.position.set( 0.0, 3.0, 1.0 );
-				camera.lookAt( new THREE.Vector3( 0, 2, 2 ) );
+				camera.position.set( 0.5952697396278381, 2.9264581203460693, 0.45332589745521545 );
+				camera.lookAt( new THREE.Vector3( 0.34052577821311814, 1.9785592579218645, 0.26203224399464353 ) );
 
 				dummyCamera = new THREE.Camera();
 
@@ -449,8 +449,8 @@ http://opensource.org/licenses/mit-license.php
 					controls = new THREE.OrbitControls( camera, canvas );
 
 					controls.enableDamping = true;
-					controls.dampingFactor = 0.25;
-					controls.enableZoom = false;
+					controls.dampingFactor = 0.15;
+					controls.enableZoom = true;
 
 					var gui = new dat.GUI();
 					gui.add( config, 'saveImage' ).name( 'Save Image' );
