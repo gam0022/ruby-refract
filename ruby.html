@@ -54,7 +54,11 @@ http://opensource.org/licenses/mit-license.php
 			uniform vec3 cameraPos;
 			uniform vec3 cameraDir;
 
-			uniform vec3 diamondVertexes[ diamondVertexCount * 3 ];
+			//uniform vec3 diamondVertexes[ diamondFaceCount * 3 ];
+			uniform sampler2D diamondVertexTexture;
+			//uniform int diamondFaceCount;
+			uniform int textureWidth;
+
 			uniform float refractiveIndex;
 
 			const float EPS = 0.001;
@@ -89,6 +93,9 @@ http://opensource.org/licenses/mit-license.php
 
 			const int DIAMOND_MATERIAL = 0;
 			const int FLOOR_MATERIAL = 1;
+
+			float frag;
+			float texShift;
 
 			void rayIntersectsTriangle( vec3 origin, vec3 ray, vec3 v0, vec3 v1, vec3 v2, inout Intersect nearest ) {
 				// レイの逆方向のベクトルを得る
@@ -148,12 +155,20 @@ http://opensource.org/licenses/mit-license.php
 				plane.color = vec3(1.0);
 				rayIntersectPlane( origin, ray, plane, nearest );
 
-				// diamond
-				for( int i = 0; i < diamondVertexCount; i++ ) {
+				float pu = texShift;
+				float pv = 0.5;
 
-					vec3 v0 = diamondVertexes[ i * 3 ];
-					vec3 v1 = diamondVertexes[ i * 3 + 1 ];
-					vec3 v2 = diamondVertexes[ i * 3 + 2 ];
+				// diamond
+				for( int i = 0; i < diamondFaceCount; i++ ) {
+
+					vec3 v0 = texture2D( diamondVertexTexture, vec2( pu, pv ) ).xyz;
+					pu += frag;
+
+					vec3 v1 = texture2D( diamondVertexTexture, vec2( pu, pv ) ).xyz;
+					pu += frag;
+
+					vec3 v2 = texture2D( diamondVertexTexture, vec2( pu, pv ) ).xyz;
+					pu += frag;
 
 					rayIntersectsTriangle( origin, ray, v0, v1, v2, nearest );
 
@@ -195,6 +210,9 @@ http://opensource.org/licenses/mit-license.php
 			}
 
 			void main(void) {
+
+				frag = 1.0 / float( textureWidth );
+				texShift = 0.5 * frag;
 
 				// fragment position
 				vec2 p = ( gl_FragCoord.xy * 2.0 - resolution ) / min( resolution.x, resolution.y );
@@ -336,20 +354,43 @@ http://opensource.org/licenses/mit-license.php
 					var faces = diamondGeometry.faces;
 					var vertices = diamondGeometry.vertices;
 
-					var diamondVertexCount = faces.length;
-					console.log( "diamondVertexCount: " + diamondVertexCount )
-					var diamondVertexes = [];
+					var diamondFaceCount = faces.length;
+					console.log( "diamondFaceCount: " + diamondFaceCount )
 
-					for(var i = 0; i < diamondVertexCount; i++ ) {
+					var width = 512;
+					var height = 1;
+					var diamondVertexes = new Float32Array( width * height * 4 );
 
+					for ( var i = 0; i < diamondFaceCount; i++ ) {
 						var face = faces[ i ];
 						var a = vertices[ face.a ];
 						var b = vertices[ face.b ];
 						var c = vertices[ face.c ];
 
-						diamondVertexes.push( a, b, c );
+						diamondVertexes[ i * 12      ]  = a.x;
+						diamondVertexes[ i * 12 + 1  ]  = a.y;
+						diamondVertexes[ i * 12 + 2  ]  = a.z;
+						diamondVertexes[ i * 12 + 3  ]  = 1.0;
 
+						diamondVertexes[ i * 12 + 4  ]  = b.x;
+						diamondVertexes[ i * 12 + 5  ]  = b.y;
+						diamondVertexes[ i * 12 + 6  ]  = b.z;
+						diamondVertexes[ i * 12 + 7  ]  = 1.0;
+
+						diamondVertexes[ i * 12 + 8  ]  = c.x;
+						diamondVertexes[ i * 12 + 9  ]  = c.y;
+						diamondVertexes[ i * 12 + 10 ]  = c.z;
+						diamondVertexes[ i * 12 + 11 ]  = 1.0;
 					}
+
+					var diamondVertexTexture = new THREE.DataTexture (
+						diamondVertexes,
+						width,
+						height,
+						THREE.RGBAFormat,
+						THREE.FloatType
+					);
+					diamondVertexTexture.needsUpdate = true;
 
 					geometry = new THREE.PlaneBufferGeometry( 2.0, 2.0 );
 					material = new THREE.RawShaderMaterial( {
@@ -357,11 +398,15 @@ http://opensource.org/licenses/mit-license.php
 							resolution: { type: 'v2', value: new THREE.Vector2( config.resolution, config.resolution ) },
 							cameraPos: { type: 'v3', value: camera.getWorldPosition() },
 							cameraDir: { type: 'v3', value: camera.getWorldDirection() },
-							diamondVertexes: { type: 'v3v', value: diamondVertexes },
+
+							//diamondFaceCount: { type: 'i', value: diamondFaceCount },
+							textureWidth: { type: 'i', value: width },
+							diamondVertexTexture: { type: 't', value: diamondVertexTexture },
+
 							refractiveIndex: { type: 'f', value: config.refractiveIndex },
 						},
 						vertexShader: document.getElementById( 'vertex_shader' ).textContent,
-						fragmentShader: document.getElementById( 'fragment_shader' ).textContent.replace( /diamondVertexCount/g, diamondVertexCount ),
+						fragmentShader: document.getElementById( 'fragment_shader' ).textContent.replace( /diamondFaceCount/g, diamondFaceCount ),
 					} );
 					mesh = new THREE.Mesh( geometry, material );
 					scene.add( mesh );
@@ -374,6 +419,13 @@ http://opensource.org/licenses/mit-license.php
 					canvas.addEventListener( 'mousemove', onMouseMove );
 					window.addEventListener( 'resize', onWindowResize );
 					document.body.appendChild( canvas );
+
+					var gl = canvas.getContext('webgl') || c.getContext('experimental-webgl');
+					var ext = gl.getExtension('OES_texture_float');
+					if( ext == null ) {
+						alert('float texture not supported');
+						return;
+					}
 
 					controls = new THREE.OrbitControls( camera, canvas );
 
