@@ -60,6 +60,9 @@ http://opensource.org/licenses/mit-license.php
 			uniform int textureWidth;
 			uniform int textureHeight;
 
+			float frag = 1.0 / float( textureWidth );
+			float texShift = 0.5 * frag;
+
 			uniform float refractiveIndex;
 
 			const float EPS = 0.001;
@@ -160,9 +163,20 @@ http://opensource.org/licenses/mit-license.php
 					//vec3 v1 = diamondVertexes[ i * 3 + 1 ];
 					//vec3 v2 = diamondVertexes[ i * 3 + 2 ];
 
-					vec3 v0 = texture2D( diamondVertexTexture, vec2( mod( float( i * 4     ), float( textureWidth ) ) / float(textureWidth), float( i * 4     ) / float( textureWidth * textureWidth ) ) ).xyz;
-					vec3 v1 = texture2D( diamondVertexTexture, vec2( mod( float( i * 4 + 1 ), float( textureWidth ) ) / float(textureWidth), float( i * 4 + 1 ) / float( textureWidth * textureWidth ) ) ).xyz;
-					vec3 v2 = texture2D( diamondVertexTexture, vec2( mod( float( i * 4 + 2 ), float( textureWidth ) ) / float(textureWidth), float( i * 4 + 2 ) / float( textureWidth * textureWidth ) ) ).xyz;
+					float index = float( i * 3 ); 
+					float pu = fract(index * frag + texShift);
+					float pv = floor(index * frag) * frag + texShift;
+					vec3 v0 = texture2D( diamondVertexTexture, vec2( pu, pv ) ).xyz;
+
+					index++;
+					pu = fract(index * frag + texShift);
+					pv = floor(index * frag) * frag + texShift;
+					vec3 v1 = texture2D( diamondVertexTexture, vec2( pu, pv ) ).xyz;
+
+					index++;
+					pu = fract(index * frag + texShift);
+					pv = floor(index * frag) * frag + texShift;
+					vec3 v2 = texture2D( diamondVertexTexture, vec2( pu, pv ) ).xyz;
 
 					rayIntersectsTriangle( origin, ray, v0, v1, v2, nearest );
 
