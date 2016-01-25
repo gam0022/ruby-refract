@@ -58,7 +58,6 @@ http://opensource.org/licenses/mit-license.php
 			uniform sampler2D diamondVertexTexture;
 			//uniform int diamondFaceCount;
 			uniform int textureWidth;
-			uniform int textureHeight;
 
 			uniform float refractiveIndex;
 
@@ -163,19 +162,14 @@ http://opensource.org/licenses/mit-license.php
 					//vec3 v1 = diamondVertexes[ i * 3 + 1 ];
 					//vec3 v2 = diamondVertexes[ i * 3 + 2 ];
 
-					float index = float( i * 3 ); 
-					float pu = fract( index * frag + texShift );
-					float pv = floor( index * frag ) * frag + texShift;
+					float pu = float( i * 3 ) * frag + texShift;
+					float pv = 0.5;
 					vec3 v0 = texture2D( diamondVertexTexture, vec2( pu, pv ) ).xyz;
 
-					index++;
-					pu = fract( index * frag + texShift );
-					pv = floor( index * frag ) * frag + texShift;
+					pu += frag;
 					vec3 v1 = texture2D( diamondVertexTexture, vec2( pu, pv ) ).xyz;
 
-					index++;
-					pu = fract( index * frag + texShift );
-					pv = floor( index * frag ) * frag + texShift;
+					pu += frag;
 					vec3 v2 = texture2D( diamondVertexTexture, vec2( pu, pv ) ).xyz;
 
 					rayIntersectsTriangle( origin, ray, v0, v1, v2, nearest );
@@ -375,8 +369,8 @@ http://opensource.org/licenses/mit-license.php
 
 					//}
 
-					var width = 32;
-					var height = 32;
+					var width = 512;
+					var height = 1;
 					var diamondVertexes = new Float32Array( width * height * 4 );
 
 					for ( var i = 0; i < diamondFaceCount; i++ ) {
@@ -419,7 +413,6 @@ http://opensource.org/licenses/mit-license.php
 
 							//diamondFaceCount: { type: 'i', value: diamondFaceCount },
 							textureWidth: { type: 'i', value: width },
-							textureHeight: { type: 'i', value: height },
 							diamondVertexTexture: { type: 't', value: diamondVertexTexture },
 
 							refractiveIndex: { type: 'f', value: config.refractiveIndex },
