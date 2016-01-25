@@ -60,9 +60,6 @@ http://opensource.org/licenses/mit-license.php
 			uniform int textureWidth;
 			uniform int textureHeight;
 
-			float frag = 1.0 / float( textureWidth );
-			float texShift = 0.5 * frag;
-
 			uniform float refractiveIndex;
 
 			const float EPS = 0.001;
@@ -156,6 +153,9 @@ http://opensource.org/licenses/mit-license.php
 				plane.color = vec3(1.0);
 				rayIntersectPlane( origin, ray, plane, nearest );
 
+				float frag = 1.0 / float( textureWidth );
+				float texShift = 0.5 * frag;
+
 				// diamond
 				for( int i = 0; i < diamondFaceCount; i++ ) {
 
@@ -164,18 +164,18 @@ http://opensource.org/licenses/mit-license.php
 					//vec3 v2 = diamondVertexes[ i * 3 + 2 ];
 
 					float index = float( i * 3 ); 
-					float pu = fract(index * frag + texShift);
-					float pv = floor(index * frag) * frag + texShift;
+					float pu = fract( index * frag + texShift );
+					float pv = floor( index * frag ) * frag + texShift;
 					vec3 v0 = texture2D( diamondVertexTexture, vec2( pu, pv ) ).xyz;
 
 					index++;
-					pu = fract(index * frag + texShift);
-					pv = floor(index * frag) * frag + texShift;
+					pu = fract( index * frag + texShift );
+					pv = floor( index * frag ) * frag + texShift;
 					vec3 v1 = texture2D( diamondVertexTexture, vec2( pu, pv ) ).xyz;
 
 					index++;
-					pu = fract(index * frag + texShift);
-					pv = floor(index * frag) * frag + texShift;
+					pu = fract( index * frag + texShift );
+					pv = floor( index * frag ) * frag + texShift;
 					vec3 v2 = texture2D( diamondVertexTexture, vec2( pu, pv ) ).xyz;
 
 					rayIntersectsTriangle( origin, ray, v0, v1, v2, nearest );
@@ -385,23 +385,23 @@ http://opensource.org/licenses/mit-license.php
 						var b = vertices[ face.b ];
 						var c = vertices[ face.c ];
 
-						diamondVertexes[ i * 4     ]  = a.x;
-						diamondVertexes[ i * 4 + 1 ]  = a.y;
-						diamondVertexes[ i * 4 + 2 ]  = a.z;
-						diamondVertexes[ i * 4 + 3 ]  = 1.0;
+						diamondVertexes[ i * 12      ]  = a.x;
+						diamondVertexes[ i * 12 + 1  ]  = a.y;
+						diamondVertexes[ i * 12 + 2  ]  = a.z;
+						diamondVertexes[ i * 12 + 3  ]  = 1.0;
 
-						diamondVertexes[ ( i + 1 ) * 4     ]  = b.x;
-						diamondVertexes[ ( i + 1 ) * 4 + 1 ]  = b.y;
-						diamondVertexes[ ( i + 1 ) * 4 + 2 ]  = b.z;
-						diamondVertexes[ ( i + 1 ) * 4 + 3 ]  = 1.0;
+						diamondVertexes[ i * 12 + 4  ]  = b.x;
+						diamondVertexes[ i * 12 + 5  ]  = b.y;
+						diamondVertexes[ i * 12 + 6  ]  = b.z;
+						diamondVertexes[ i * 12 + 7  ]  = 1.0;
 
-						diamondVertexes[ ( i + 2 ) * 4     ]  = c.x;
-						diamondVertexes[ ( i + 2 ) * 4 + 1 ]  = c.y;
-						diamondVertexes[ ( i + 2 ) * 4 + 2 ]  = c.z;
-						diamondVertexes[ ( i + 2 ) * 4 + 3 ]  = 1.0;
+						diamondVertexes[ i * 12 + 8  ]  = c.x;
+						diamondVertexes[ i * 12 + 9  ]  = c.y;
+						diamondVertexes[ i * 12 + 10 ]  = c.z;
+						diamondVertexes[ i * 12 + 11 ]  = 1.0;
 					}
 
-					var diamondVertexTexture = new THREE.DataTexture(
+					var diamondVertexTexture = new THREE.DataTexture (
 						diamondVertexes,
 						width,
 						height,
@@ -438,6 +438,13 @@ http://opensource.org/licenses/mit-license.php
 					canvas.addEventListener( 'mousemove', onMouseMove );
 					window.addEventListener( 'resize', onWindowResize );
 					document.body.appendChild( canvas );
+
+					var gl = canvas.getContext('webgl') || c.getContext('experimental-webgl');
+					var ext = gl.getExtension('OES_texture_float');
+					if( ext == null ) {
+						alert('float texture not supported');
+						return;
+					}
 
 					controls = new THREE.OrbitControls( camera, canvas );
 
