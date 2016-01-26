@@ -62,7 +62,8 @@ http://opensource.org/licenses/mit-license.php
 			uniform vec2 resolution;
 
 			const float EPS = 0.001;
-			const vec3 lightDir = vec3( 0.48666426339228763, -0.3244428422615251, 0.8111071056538127 );
+			const vec3 lightDir1 = vec3( 0.48666426339228763, 0.3244428422615251, 0.8111071056538127 );
+			const vec3 lightDir2 = vec3( -0.48666426339228763, 0.3244428422615251, -0.8111071056538127 );
 
 
 			float det( vec3 a, vec3 b, vec3 c ) {
@@ -189,25 +190,29 @@ http://opensource.org/licenses/mit-license.php
 
 					if ( nearest.material == DIAMOND_MATERIAL ) {
 
-						float diffuse1 = clamp( dot( lightDir, nearest.normal ), 0.1, 1.0 );
-						float diffuse2 = clamp( dot( -lightDir, nearest.normal ), 0.1, 1.0 );
-						//float specular1 = pow( clamp( dot( reflect( lightDir, nearest.normal ), ray ), 0.0, 1.0 ), 10.0 );
-						//float specular2 = pow( clamp( dot( reflect( -lightDir, nearest.normal ), ray ), 0.0, 1.0 ), 10.0 );
-						nearest.color *= clamp( diffuse1 + diffuse2/* + specular1 + specular2*/, 0.0, 1.0 );
+						float diffuse1 = clamp( dot( lightDir1, nearest.normal ), 0.1, 1.0 );
+						float diffuse2 = clamp( dot( lightDir2, nearest.normal ), 0.1, 1.0 );
+						nearest.color *= clamp( diffuse1 + diffuse2, 0.0, 1.0 );
+
+						float specular1 = pow( clamp( dot( reflect( lightDir1, nearest.normal ), ray ), 0.0, 1.0 ), 100.0 );
+						float specular2 = pow( clamp( dot( reflect( lightDir2, nearest.normal ), ray ), 0.0, 1.0 ), 100.0 );
+						nearest.color += vec3( 1.0 ) * clamp( specular1 + specular2, 0.0, 1.0 );
 
 					}
 
 					if ( nearest.material == FLOOR_MATERIAL ) {
 
-						float d = clamp( dot( nearest.normal, lightDir ), 0.1, 1.0 );
+						float diffuse1 = clamp( dot( nearest.normal, lightDir1 ), 0.1, 1.0 );
+						float diffuse2 = clamp( dot( nearest.normal, lightDir2 ), 0.1, 1.0 );
+						float d = diffuse1 + diffuse2;
 						float m = mod( nearest.position.x, 2.0 );
 						float n = mod( nearest.position.z, 2.0 );
 						if ( ( m > 1.0 && n > 1.0 ) || ( m < 1.0 && n < 1.0 ) ) d *= 0.1;
-						nearest.color *= d * 3.0;
+						nearest.color *= d;
 
 					}
 
-					nearest.color -= clamp( 0.025 * nearest.distance, 0.0, 0.3 );
+					nearest.color -= clamp( 0.03 * nearest.distance, 0.0, 0.6 );
 
 				} else {
 
