@@ -62,8 +62,12 @@ http://opensource.org/licenses/mit-license.php
 			uniform vec2 resolution;
 
 			const float EPS = 0.001;
+
+			// 上方向からの光源
 			const vec3 lightDir1 = vec3( 0.48666426339228763, 0.3244428422615251, 0.8111071056538127 );
-			const vec3 lightDir2 = vec3( -0.48666426339228763, 0.3244428422615251, -0.8111071056538127 );
+
+			// 下方向からの光源
+			const vec3 lightDir2 = vec3( -0.48666426339228763, -0.3244428422615251, -0.8111071056538127 );
 
 
 			float det( vec3 a, vec3 b, vec3 c ) {
@@ -195,8 +199,8 @@ http://opensource.org/licenses/mit-license.php
 						nearest.color *= clamp( diffuse1 + diffuse2, 0.0, 1.0 );
 
 						float specular1 = pow( clamp( dot( reflect( lightDir1, nearest.normal ), ray ), 0.0, 1.0 ), 100.0 );
-						float specular2 = pow( clamp( dot( reflect( lightDir2, nearest.normal ), ray ), 0.0, 1.0 ), 100.0 );
-						nearest.color += vec3( 1.0 ) * clamp( specular1 + specular2, 0.0, 1.0 );
+						//float specular2 = pow( clamp( dot( reflect( lightDir2, nearest.normal ), ray ), 0.0, 1.0 ), 100.0 );
+						nearest.color += vec3( 0.8 ) * clamp( specular1 /*+ specular2*/, 0.0, 1.0 );
 
 					}
 
