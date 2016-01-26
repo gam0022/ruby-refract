@@ -332,6 +332,7 @@ http://opensource.org/licenses/mit-license.php
 				freeCamera: true,
 				gammaCorrection: false,
 				refractiveIndex: 1.42,
+				diamond: 'diamond_mod',
 				resolution: '256',
 			};
 
@@ -359,8 +360,7 @@ http://opensource.org/licenses/mit-license.php
 
 				dummyCamera = new THREE.Camera();
 
-				// models/a03_mod.obj
-				updateVertexTexture( "models/diamond_mod.obj", diamond );
+				updateVertexTexture( "models/" + config.diamond +  ".obj", diamond );
 
 				geometry = new THREE.PlaneBufferGeometry( 2.0, 2.0 );
 				material = new THREE.RawShaderMaterial( {
@@ -408,6 +408,12 @@ http://opensource.org/licenses/mit-license.php
 				gui.add( config, 'freeCamera' ).name( 'Free Camera' );
 				gui.add( config, 'gammaCorrection' ).name( 'Gamma Correction' );
 				gui.add( config, 'refractiveIndex', 0.0, 3.0 ).name( 'Refractive Index' );
+				gui.add( config, 'diamond', [ 'diamond_mod', 'a03_mod' ] ).name( 'Diamond' ).onChange( function( value ) {
+
+					updateVertexTexture( "models/" + value +  ".obj", diamond );
+
+				} );
+
 				gui.add( config, 'resolution', [ '256', '512', '800', 'full' ] ).name( 'Resolution' ).onChange( function( value ) {
 
 					if ( value !== 'full' ) {
