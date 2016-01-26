@@ -168,7 +168,7 @@ http://opensource.org/licenses/mit-license.php
 				float pv = 0.5;
 
 				// diamond
-				for( int i = 0; i < textureWidth; i++ ) {
+				for( int i = 0; i < VERTEX_TEXTURE_WIDTH; i++ ) {
 
 					if ( i >= diamondFaceCount ) break;
 
@@ -222,7 +222,7 @@ http://opensource.org/licenses/mit-license.php
 
 			void main(void) {
 
-				frag = 1.0 / float( textureWidth );
+				frag = 1.0 / float( VERTEX_TEXTURE_WIDTH );
 				texShift = 0.5 * frag;
 
 				// fragment position
@@ -376,7 +376,7 @@ http://opensource.org/licenses/mit-license.php
 						diamondVertexTexture: { type: 't', value: diamond.vertexTexture },
 					},
 					vertexShader: document.getElementById( 'vertex_shader' ).textContent,
-					fragmentShader: document.getElementById( 'fragment_shader' ).textContent.replace( /textureWidth/g, VERTEX_TEXTURE_WIDTH ),
+					fragmentShader: document.getElementById( 'fragment_shader' ).textContent.replace( /VERTEX_TEXTURE_WIDTH/g, VERTEX_TEXTURE_WIDTH ),
 				} );
 				mesh = new THREE.Mesh( geometry, material );
 				scene.add( mesh );
