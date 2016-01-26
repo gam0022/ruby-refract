@@ -51,9 +51,8 @@ http://opensource.org/licenses/mit-license.php
 			precision highp float;
 
 			//uniform vec3 diamondVertexes[ diamondFaceCount * 3 ];
+			uniform int diamondFaceCount;
 			uniform sampler2D diamondVertexTexture;
-			//uniform int diamondFaceCount;
-			uniform int textureWidth;
 
 			uniform vec3 cameraPos;
 			uniform vec3 cameraDir;
@@ -169,7 +168,9 @@ http://opensource.org/licenses/mit-license.php
 				float pv = 0.5;
 
 				// diamond
-				for( int i = 0; i < diamondFaceCount; i++ ) {
+				for( int i = 0; i < textureWidth; i++ ) {
+
+					if ( i >= diamondFaceCount ) break;
 
 					vec3 v0 = texture2D( diamondVertexTexture, vec2( pu, pv ) ).xyz;
 					pu += frag;
@@ -334,6 +335,18 @@ http://opensource.org/licenses/mit-license.php
 				resolution: '256',
 			};
 
+			var diamond = {
+				faceCount: 0,
+				vertexTexture: new THREE.DataTexture (
+					new Float32Array(1),
+					1, 1,
+					THREE.RGBAFormat,
+					THREE.FloatType
+				),
+			};
+
+			var VERTEX_TEXTURE_WIDTH = 512;
+
 			init();
 
 			function init() {
@@ -345,6 +358,76 @@ http://opensource.org/licenses/mit-license.php
 				camera.lookAt( new THREE.Vector3( 0.34052577821311814, 1.9785592579218645, 0.26203224399464353 ) );
 
 				dummyCamera = new THREE.Camera();
+
+				// models/a03_mod.obj
+				updateVertexTexture( "models/diamond_mod.obj", diamond );
+
+				geometry = new THREE.PlaneBufferGeometry( 2.0, 2.0 );
+				material = new THREE.RawShaderMaterial( {
+					uniforms: {
+						cameraPos: { type: 'v3', value: camera.getWorldPosition() },
+						cameraDir: { type: 'v3', value: camera.getWorldDirection() },
+
+						gammaCorrection: { type: 'i', value: config.gammaCorrection },
+						refractiveIndex: { type: 'f', value: config.refractiveIndex },
+						resolution: { type: 'v2', value: new THREE.Vector2( config.resolution, config.resolution ) },
+
+						diamondFaceCount: { type: 'i', value: diamond.faceCount },
+						diamondVertexTexture: { type: 't', value: diamond.vertexTexture },
+					},
+					vertexShader: document.getElementById( 'vertex_shader' ).textContent,
+					fragmentShader: document.getElementById( 'fragment_shader' ).textContent.replace( /textureWidth/g, VERTEX_TEXTURE_WIDTH ),
+				} );
+				mesh = new THREE.Mesh( geometry, material );
+				scene.add( mesh );
+
+				renderer = new THREE.WebGLRenderer();
+				//renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( config.resolution, config.resolution );
+
+				canvas = renderer.domElement;
+				canvas.addEventListener( 'mousemove', onMouseMove );
+				window.addEventListener( 'resize', onWindowResize );
+				document.body.appendChild( canvas );
+
+				var gl = canvas.getContext('webgl') || c.getContext('experimental-webgl');
+				var ext = gl.getExtension('OES_texture_float');
+				if( ext == null ) {
+					alert('float texture not supported');
+					return;
+				}
+
+				controls = new THREE.OrbitControls( camera, canvas );
+
+				controls.enableDamping = true;
+				controls.dampingFactor = 0.15;
+				controls.enableZoom = true;
+
+				var gui = new dat.GUI();
+				gui.add( config, 'saveImage' ).name( 'Save Image' );
+				gui.add( config, 'freeCamera' ).name( 'Free Camera' );
+				gui.add( config, 'gammaCorrection' ).name( 'Gamma Correction' );
+				gui.add( config, 'refractiveIndex', 0.0, 3.0 ).name( 'Refractive Index' );
+				gui.add( config, 'resolution', [ '256', '512', '800', 'full' ] ).name( 'Resolution' ).onChange( function( value ) {
+
+					if ( value !== 'full' ) {
+
+						canvas.width = value;
+						canvas.height = value;
+
+					}
+					onWindowResize();
+
+				} );
+
+				stats = new Stats();
+				document.body.appendChild( stats.domElement );
+
+				render();
+
+			}
+
+			function updateVertexTexture( obj_url, target ) {
 
 				var manager = new THREE.LoadingManager();
 				manager.onProgress = function ( item, loaded, total ) {
@@ -364,22 +447,19 @@ http://opensource.org/licenses/mit-license.php
 				};
 
 				var loader = new THREE.OBJLoader( manager );
-				loader.load( 'models/diamond_mod.obj', function ( object ) {
-				//loader.load( 'models/a03_mod.obj', function ( object ) {
+				loader.load( obj_url, function ( object ) {
 
 					var bufferGeometry = object.children[0].geometry;
 					var diamondGeometry = new THREE.Geometry().fromBufferGeometry( bufferGeometry );
 					var faces = diamondGeometry.faces;
 					var vertices = diamondGeometry.vertices;
 
-					var diamondFaceCount = faces.length;
-					console.log( "diamondFaceCount: " + diamondFaceCount )
-
-					var width = 512;
+					var faceCount = faces.length;
+					var width = VERTEX_TEXTURE_WIDTH;
 					var height = 1;
 					var diamondVertexes = new Float32Array( width * height * 4 );
 
-					for ( var i = 0; i < diamondFaceCount; i++ ) {
+					for ( var i = 0; i < faceCount; i++ ) {
 						var face = faces[ i ];
 						var a = vertices[ face.a ];
 						var b = vertices[ face.b ];
@@ -401,82 +481,19 @@ http://opensource.org/licenses/mit-license.php
 						diamondVertexes[ i * 12 + 11 ]  = 1.0;
 					}
 
-					var diamondVertexTexture = new THREE.DataTexture (
+					var vertexTexture = new THREE.DataTexture (
 						diamondVertexes,
 						width,
 						height,
 						THREE.RGBAFormat,
 						THREE.FloatType
 					);
-					diamondVertexTexture.needsUpdate = true;
+					vertexTexture.needsUpdate = true;
 
-					geometry = new THREE.PlaneBufferGeometry( 2.0, 2.0 );
-					material = new THREE.RawShaderMaterial( {
-						uniforms: {
-							cameraPos: { type: 'v3', value: camera.getWorldPosition() },
-							cameraDir: { type: 'v3', value: camera.getWorldDirection() },
-
-							gammaCorrection: { type: 'i', value: config.gammaCorrection },
-							refractiveIndex: { type: 'f', value: config.refractiveIndex },
-							resolution: { type: 'v2', value: new THREE.Vector2( config.resolution, config.resolution ) },
-
-							//diamondFaceCount: { type: 'i', value: diamondFaceCount },
-							textureWidth: { type: 'i', value: width },
-							diamondVertexTexture: { type: 't', value: diamondVertexTexture },
-						},
-						vertexShader: document.getElementById( 'vertex_shader' ).textContent,
-						fragmentShader: document.getElementById( 'fragment_shader' ).textContent.replace( /diamondFaceCount/g, diamondFaceCount ),
-					} );
-					mesh = new THREE.Mesh( geometry, material );
-					scene.add( mesh );
-
-					renderer = new THREE.WebGLRenderer();
-					//renderer.setPixelRatio( window.devicePixelRatio );
-					renderer.setSize( config.resolution, config.resolution );
-
-					canvas = renderer.domElement;
-					canvas.addEventListener( 'mousemove', onMouseMove );
-					window.addEventListener( 'resize', onWindowResize );
-					document.body.appendChild( canvas );
-
-					var gl = canvas.getContext('webgl') || c.getContext('experimental-webgl');
-					var ext = gl.getExtension('OES_texture_float');
-					if( ext == null ) {
-						alert('float texture not supported');
-						return;
-					}
-
-					controls = new THREE.OrbitControls( camera, canvas );
-
-					controls.enableDamping = true;
-					controls.dampingFactor = 0.15;
-					controls.enableZoom = true;
-
-					var gui = new dat.GUI();
-					gui.add( config, 'saveImage' ).name( 'Save Image' );
-					gui.add( config, 'freeCamera' ).name( 'Free Camera' );
-					gui.add( config, 'gammaCorrection' ).name( 'Gamma Correction' );
-					gui.add( config, 'refractiveIndex', 0.0, 3.0 ).name( 'Refractive Index' );
-					gui.add( config, 'resolution', [ '256', '512', '800', 'full' ] ).name( 'Resolution' ).onChange( function( value ) {
-
-						if ( value !== 'full' ) {
-
-							canvas.width = value;
-							canvas.height = value;
-
-						}
-						onWindowResize();
-
-					} );
-
-					stats = new Stats();
-					document.body.appendChild( stats.domElement );
-
-					render();
-
+					target.faceCount     = faceCount;
+					target.vertexTexture = vertexTexture;
 
 				}, onProgress, onError );
-
 			}
 
 			function render( timestamp ) {
@@ -498,11 +515,16 @@ http://opensource.org/licenses/mit-license.php
 
 				}
 
-				material.uniforms.resolution.value = new THREE.Vector2( canvas.width, canvas.height );
 				material.uniforms.cameraPos.value = camera.getWorldPosition();
 				material.uniforms.cameraDir.value = camera.getWorldDirection();
+
 				material.uniforms.gammaCorrection.value = config.gammaCorrection;
 				material.uniforms.refractiveIndex.value = config.refractiveIndex;
+				material.uniforms.resolution.value      = new THREE.Vector2( canvas.width, canvas.height );
+
+				material.uniforms.diamondFaceCount.value     = diamond.faceCount;
+				material.uniforms.diamondVertexTexture.value = diamond.vertexTexture;
+
 				renderer.render( scene, dummyCamera );
 
 				stats.end();
