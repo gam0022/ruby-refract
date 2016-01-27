@@ -83,8 +83,8 @@ http://opensource.org/licenses/mit-license.php
 			}
 
 			struct Intersect {
-				bool is_hit;
-				bool is_front;
+				bool isHit;
+				bool isFront;
 				vec3 position;
 				float distance;
 				vec3 normal;
@@ -128,13 +128,13 @@ http://opensource.org/licenses/mit-license.php
 							float t = det( edge1, edge2, d ) * invDenominator;
 							if ( t >= 0.0 && t < nearest.distance ) {
 
-								nearest.is_hit = true;
+								nearest.isHit = true;
 								nearest.position = origin + ray * t;
 								nearest.distance = t;
 								nearest.normal = normalize( cross( edge1, edge2 ) ) * sign( invDenominator );
 								nearest.material = DIAMOND_MATERIAL;
 								//nearest.color = diamondDiffuseColor;
-								nearest.is_front = invDenominator > 0.0;
+								nearest.isFront = invDenominator > 0.0;
 
 							}
 						}
@@ -149,7 +149,7 @@ http://opensource.org/licenses/mit-license.php
 				float t = -( dot( origin, plane.normal ) + d ) / v;
 				if( t > 0.0 && t < nearest.distance ) {
 
-					nearest.is_hit = true;
+					nearest.isHit = true;
 					nearest.position = origin + ray * t;
 					nearest.normal = plane.normal;
 					nearest.distance = t;
@@ -163,7 +163,7 @@ http://opensource.org/licenses/mit-license.php
 			Intersect getRayColor( vec3 origin, vec3 ray) {
 
 				Intersect nearest;
-				nearest.is_hit = false;
+				nearest.isHit = false;
 				nearest.distance = 1.0e+30;
 
 				// Plane
@@ -194,7 +194,7 @@ http://opensource.org/licenses/mit-license.php
 
 				}
 
-				if ( nearest.is_hit ) {
+				if ( nearest.isHit ) {
 
 					if ( nearest.material == DIAMOND_MATERIAL ) {
 
@@ -263,7 +263,7 @@ http://opensource.org/licenses/mit-license.php
 					if ( nearest.material == DIAMOND_MATERIAL ) {
 
 						float eta = refractiveIndex;
-						if ( nearest.is_front ) eta = 1.0 / eta;
+						if ( nearest.isFront ) eta = 1.0 / eta;
 						ray = refract( ray, nearest.normal, eta );
 						cPos = nearest.position - nearest.normal * EPS;
 
@@ -286,7 +286,7 @@ http://opensource.org/licenses/mit-license.php
 
 					ray = normalize( ray );
 
-					if ( !nearest.is_hit ) break;
+					if ( !nearest.isHit ) break;
 
 				}
 
