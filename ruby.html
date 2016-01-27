@@ -63,6 +63,9 @@ http://opensource.org/licenses/mit-license.php
 
 			const float EPS = 0.001;
 
+			const vec3 diamondDiffuseColor  = vec3( 0.3, 0.01, 0.01 );
+			const vec3 diamondSpecularColor = vec3( 1.0, 0.4, 0.4 );
+
 			// 上方向からの光源
 			const vec3 lightDir1 = vec3( 0.48666426339228763, 0.3244428422615251, 0.8111071056538127 );
 
@@ -124,12 +127,13 @@ http://opensource.org/licenses/mit-license.php
 
 							float t = det( edge1, edge2, d ) * invDenominator;
 							if ( t >= 0.0 && t < nearest.distance ) {
+
 								nearest.is_hit = true;
 								nearest.position = origin + ray * t;
 								nearest.distance = t;
 								nearest.normal = normalize( cross( edge1, edge2 ) ) * sign( invDenominator );
 								nearest.material = DIAMOND_MATERIAL;
-								nearest.color = vec3( 0.3, 0.01, 0.01 );
+								//nearest.color = diamondDiffuseColor;
 								nearest.is_front = invDenominator > 0.0;
 
 							}
@@ -196,11 +200,11 @@ http://opensource.org/licenses/mit-license.php
 
 						float diffuse1 = clamp( dot( lightDir1, nearest.normal ), 0.1, 1.0 );
 						float diffuse2 = clamp( dot( lightDir2, nearest.normal ), 0.1, 1.0 );
-						nearest.color *= clamp( diffuse1 + diffuse2, 0.0, 1.0 );
+						nearest.color = diamondDiffuseColor * clamp( diffuse1 + diffuse2, 0.0, 1.0 );
 
 						float specular1 = pow( clamp( dot( reflect( lightDir1, nearest.normal ), ray ), 0.0, 1.0 ), 100.0 );
-						//float specular2 = pow( clamp( dot( reflect( lightDir2, nearest.normal ), ray ), 0.0, 1.0 ), 100.0 );
-						nearest.color += vec3( 0.8 ) * clamp( specular1 /*+ specular2*/, 0.0, 1.0 );
+						float specular2 = pow( clamp( dot( reflect( lightDir2, nearest.normal ), ray ), 0.0, 1.0 ), 100.0 );
+						nearest.color += diamondSpecularColor * clamp( specular1 + specular2, 0.0, 1.0 );
 
 					}
 
