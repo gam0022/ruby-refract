@@ -437,7 +437,7 @@ http://opensource.org/licenses/mit-license.php
 				gui.addColor( config, 'diamondSpecularColor' ).name( 'Specular Color' );
 				gui.add( config, 'refractiveIndex', 0.0, 3.0 ).name( 'Refractive Index' );
 
-				gui.add( config, 'resolution', [ '256', '512', '800', 'full' ] ).name( 'Resolution' ).onChange( function( value ) {
+				gui.add( config, 'resolution', [ '128', '256', '512', '800', 'full' ] ).name( 'Resolution' ).onChange( function( value ) {
 
 					if ( value !== 'full' ) {
 
