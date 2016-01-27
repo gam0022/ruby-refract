@@ -63,8 +63,8 @@ http://opensource.org/licenses/mit-license.php
 
 			const float EPS = 0.001;
 
-			const vec3 diamondDiffuseColor  = vec3( 0.3, 0.01, 0.01 );
-			const vec3 diamondSpecularColor = vec3( 1.0, 0.4, 0.4 );
+			uniform vec3 diamondDiffuseColor;
+			uniform vec3 diamondSpecularColor;
 
 			// 上方向からの光源
 			const vec3 lightDir1 = vec3( 0.48666426339228763, 0.3244428422615251, 0.8111071056538127 );
@@ -345,7 +345,11 @@ http://opensource.org/licenses/mit-license.php
 				freeCamera: false,
 				gammaCorrection: false,
 				refractiveIndex: 1.42,
+
 				diamond: 'diamond_mod',
+				diamondDiffuseColor:  [ 0.3 * 255, 0.01 * 255, 0.01 * 255 ],
+				diamondSpecularColor: [ 1.0 * 255, 0.4  * 255, 0.4  * 255 ],
+
 				resolution: '256',
 			};
 
@@ -382,11 +386,14 @@ http://opensource.org/licenses/mit-license.php
 						cameraDir: { type: 'v3', value: camera.getWorldDirection() },
 
 						gammaCorrection: { type: 'i', value: config.gammaCorrection },
-						refractiveIndex: { type: 'f', value: config.refractiveIndex },
 						resolution: { type: 'v2', value: new THREE.Vector2( config.resolution, config.resolution ) },
 
 						diamondFaceCount: { type: 'i', value: diamond.faceCount },
 						diamondVertexTexture: { type: 't', value: diamond.vertexTexture },
+
+						refractiveIndex: { type: 'f', value: config.refractiveIndex },
+						diamondDiffuseColor:  { type: 'v3', value: datGuiColorToVector3( config.diamondDiffuseColor ) },
+						diamondSpecularColor: { type: 'v3', value: datGuiColorToVector3( config.diamondSpecularColor ) },
 					},
 					vertexShader: document.getElementById( 'vertex_shader' ).textContent,
 					fragmentShader: document.getElementById( 'fragment_shader' ).textContent.replace( /VERTEX_TEXTURE_WIDTH/g, VERTEX_TEXTURE_WIDTH ),
@@ -420,12 +427,15 @@ http://opensource.org/licenses/mit-license.php
 				gui.add( config, 'saveImage' ).name( 'Save Image' );
 				gui.add( config, 'freeCamera' ).name( 'Free Camera' );
 				gui.add( config, 'gammaCorrection' ).name( 'Gamma Correction' );
-				gui.add( config, 'refractiveIndex', 0.0, 3.0 ).name( 'Refractive Index' );
-				gui.add( config, 'diamond', [ 'diamond_mod', 'a03_mod' ] ).name( 'Diamond' ).onChange( function( value ) {
+				gui.add( config, 'diamond', [ 'diamond_mod', 'a03_mod' ] ).name( 'Model' ).onChange( function( value ) {
 
 					updateVertexTexture( "models/" + value +  ".obj", diamond );
 
 				} );
+
+				gui.addColor( config, 'diamondDiffuseColor' ).name( 'Diffuse Color' );
+				gui.addColor( config, 'diamondSpecularColor' ).name( 'Specular Color' );
+				gui.add( config, 'refractiveIndex', 0.0, 3.0 ).name( 'Refractive Index' );
 
 				gui.add( config, 'resolution', [ '256', '512', '800', 'full' ] ).name( 'Resolution' ).onChange( function( value ) {
 
@@ -538,11 +548,14 @@ http://opensource.org/licenses/mit-license.php
 				material.uniforms.cameraDir.value = camera.getWorldDirection();
 
 				material.uniforms.gammaCorrection.value = config.gammaCorrection;
-				material.uniforms.refractiveIndex.value = config.refractiveIndex;
 				material.uniforms.resolution.value      = new THREE.Vector2( canvas.width, canvas.height );
 
 				material.uniforms.diamondFaceCount.value     = diamond.faceCount;
 				material.uniforms.diamondVertexTexture.value = diamond.vertexTexture;
+
+				material.uniforms.diamondDiffuseColor.value  = datGuiColorToVector3( config.diamondDiffuseColor );
+				material.uniforms.diamondSpecularColor.value = datGuiColorToVector3( config.diamondSpecularColor );
+				material.uniforms.refractiveIndex.value = config.refractiveIndex;
 
 				renderer.render( scene, dummyCamera );
 
@@ -568,6 +581,12 @@ http://opensource.org/licenses/mit-license.php
 				}
 
 				renderer.setSize( canvas.width, canvas.height );
+
+			}
+
+			function datGuiColorToVector3( datGuiColor ) {
+
+				return new THREE.Vector3( datGuiColor[0] / 255, datGuiColor[1] / 255, datGuiColor[2] / 255 );
 
 			}
 
