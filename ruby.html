@@ -346,7 +346,7 @@ http://opensource.org/licenses/mit-license.php
 				gammaCorrection: false,
 				refractiveIndex: 1.42,
 
-				diamond: 'brilliant_diamond',
+				diamond: 'round_brilliant',
 				diamondDiffuseColor:  "#4c0202",//[ 0.3 * 255, 0.01 * 255, 0.01 * 255 ],
 				diamondSpecularColor: "#ff6666",//[ 1.0 * 255, 0.4  * 255, 0.4  * 255 ],
 
@@ -432,7 +432,7 @@ http://opensource.org/licenses/mit-license.php
 				gui.add( config, 'saveImage' ).name( 'Save Image' );
 				gui.add( config, 'freeCamera' ).name( 'Free Camera' );
 				gui.add( config, 'gammaCorrection' ).name( 'Gamma Correction' );
-				gui.add( config, 'diamond', [ 'brilliant_diamond', 'round_brilliant_cut', 'regular_octahedron', 'barion', 'oval_brilliant' ] ).name( 'Model' ).onChange( function( value ) {
+				gui.add( config, 'diamond', [ 'round_brilliant', 'round_brilliant2', 'regular_octahedron', 'barion', 'oval_brilliant' ] ).name( 'Model' ).onChange( function( value ) {
 
 					updateVertexTexture( "models/" + value +  ".obj", diamond );
 
@@ -500,6 +500,8 @@ http://opensource.org/licenses/mit-license.php
 					var vertices = diamondGeometry.vertices;
 
 					var faceCount = faces.length;
+					console.log( "faceCount: " + faceCount );
+
 					var width = VERTEX_TEXTURE_WIDTH;
 					var height = 1;
 					var diamondVertexes = new Float32Array( width * height * 4 );
