@@ -347,11 +347,13 @@ http://opensource.org/licenses/mit-license.php
 				refractiveIndex: 1.42,
 
 				diamond: 'round_brilliant_cut',
-				diamondDiffuseColor:  [ 0.3 * 255, 0.01 * 255, 0.01 * 255 ],
-				diamondSpecularColor: [ 1.0 * 255, 0.4  * 255, 0.4  * 255 ],
+				diamondDiffuseColor:  "#4c0202",//[ 0.3 * 255, 0.01 * 255, 0.01 * 255 ],
+				diamondSpecularColor: "#ff6666",//[ 1.0 * 255, 0.4  * 255, 0.4  * 255 ],
 
 				resolution: '256',
 			};
+			var diamondDiffuseColorVector = new THREE.Vector3();
+			var diamondSpecularColorVector = new THREE.Vector3();
 
 			var diamond = {
 				faceCount: 0,
@@ -379,6 +381,9 @@ http://opensource.org/licenses/mit-license.php
 
 				updateVertexTexture( "models/" + config.diamond +  ".obj", diamond );
 
+				setColorVectorFromHex( config.diamondDiffuseColor, diamondDiffuseColorVector );
+				setColorVectorFromHex( config.diamondSpecularColor, diamondSpecularColorVector );
+
 				geometry = new THREE.PlaneBufferGeometry( 2.0, 2.0 );
 				material = new THREE.RawShaderMaterial( {
 					uniforms: {
@@ -392,8 +397,8 @@ http://opensource.org/licenses/mit-license.php
 						diamondVertexTexture: { type: 't', value: diamond.vertexTexture },
 
 						refractiveIndex: { type: 'f', value: config.refractiveIndex },
-						diamondDiffuseColor:  { type: 'v3', value: datGuiColorToVector3( config.diamondDiffuseColor ) },
-						diamondSpecularColor: { type: 'v3', value: datGuiColorToVector3( config.diamondSpecularColor ) },
+						diamondDiffuseColor:  { type: 'v3', value: diamondDiffuseColorVector },
+						diamondSpecularColor: { type: 'v3', value: diamondSpecularColorVector },
 					},
 					vertexShader: document.getElementById( 'vertex_shader' ).textContent,
 					fragmentShader: document.getElementById( 'fragment_shader' ).textContent.replace( /VERTEX_TEXTURE_WIDTH/g, VERTEX_TEXTURE_WIDTH ),
@@ -433,8 +438,19 @@ http://opensource.org/licenses/mit-license.php
 
 				} );
 
-				gui.addColor( config, 'diamondDiffuseColor' ).name( 'Diffuse Color' );
-				gui.addColor( config, 'diamondSpecularColor' ).name( 'Specular Color' );
+				gui.addColor( config, 'diamondDiffuseColor' ).name( 'Diffuse Color' ).onChange( function( value ) {
+
+					setColorVectorFromHex( value, diamondDiffuseColorVector );
+
+				} );
+
+				gui.addColor( config, 'diamondSpecularColor' ).name( 'Specular Color' ).onChange( function( value ) {
+
+					setColorVectorFromHex( value, diamondSpecularColorVector );
+
+				} );
+
+
 				gui.add( config, 'refractiveIndex', 0.0, 3.0 ).name( 'Refractive Index' );
 
 				gui.add( config, 'resolution', [ '128', '256', '512', '800', 'full' ] ).name( 'Resolution' ).onChange( function( value ) {
@@ -553,8 +569,8 @@ http://opensource.org/licenses/mit-license.php
 				material.uniforms.diamondFaceCount.value     = diamond.faceCount;
 				material.uniforms.diamondVertexTexture.value = diamond.vertexTexture;
 
-				material.uniforms.diamondDiffuseColor.value  = datGuiColorToVector3( config.diamondDiffuseColor );
-				material.uniforms.diamondSpecularColor.value = datGuiColorToVector3( config.diamondSpecularColor );
+				material.uniforms.diamondDiffuseColor.value  = diamondDiffuseColorVector;
+				material.uniforms.diamondSpecularColor.value = diamondSpecularColorVector;
 				material.uniforms.refractiveIndex.value = config.refractiveIndex;
 
 				renderer.render( scene, dummyCamera );
@@ -584,9 +600,10 @@ http://opensource.org/licenses/mit-license.php
 
 			}
 
-			function datGuiColorToVector3( datGuiColor ) {
+			function setColorVectorFromHex( hex, vector ) {
 
-				return new THREE.Vector3( datGuiColor[0] / 255, datGuiColor[1] / 255, datGuiColor[2] / 255 );
+				var color = new THREE.Color( hex );
+				vector.set( color.r, color.g, color.b );
 
 			}
 
