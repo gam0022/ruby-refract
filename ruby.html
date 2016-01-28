@@ -346,7 +346,7 @@ http://opensource.org/licenses/mit-license.php
 				gammaCorrection: false,
 				refractiveIndex: 1.42,
 
-				diamond: 'diamond_mod',
+				diamond: 'round_brilliant_cut',
 				diamondDiffuseColor:  [ 0.3 * 255, 0.01 * 255, 0.01 * 255 ],
 				diamondSpecularColor: [ 1.0 * 255, 0.4  * 255, 0.4  * 255 ],
 
@@ -427,7 +427,7 @@ http://opensource.org/licenses/mit-license.php
 				gui.add( config, 'saveImage' ).name( 'Save Image' );
 				gui.add( config, 'freeCamera' ).name( 'Free Camera' );
 				gui.add( config, 'gammaCorrection' ).name( 'Gamma Correction' );
-				gui.add( config, 'diamond', [ 'diamond_mod', 'a03_mod' ] ).name( 'Model' ).onChange( function( value ) {
+				gui.add( config, 'diamond', [ 'round_brilliant_cut', 'regular_octahedron' ] ).name( 'Model' ).onChange( function( value ) {
 
 					updateVertexTexture( "models/" + value +  ".obj", diamond );
 
