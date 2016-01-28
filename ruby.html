@@ -432,7 +432,7 @@ http://opensource.org/licenses/mit-license.php
 				gui.add( config, 'saveImage' ).name( 'Save Image' );
 				gui.add( config, 'freeCamera' ).name( 'Free Camera' );
 				gui.add( config, 'gammaCorrection' ).name( 'Gamma Correction' );
-				gui.add( config, 'diamond', [ 'round_brilliant_cut', 'regular_octahedron', 'barion' ] ).name( 'Model' ).onChange( function( value ) {
+				gui.add( config, 'diamond', [ 'round_brilliant_cut', 'regular_octahedron', 'barion', 'oval_brilliant' ] ).name( 'Model' ).onChange( function( value ) {
 
 					updateVertexTexture( "models/" + value +  ".obj", diamond );
 
