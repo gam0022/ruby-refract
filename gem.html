@@ -59,6 +59,7 @@ http://opensource.org/licenses/mit-license.php
 
 			uniform bool gammaCorrection;
 			uniform float refractiveIndex;
+			float invRefractiveIndex;
 			uniform vec2 resolution;
 
 			const float EPS = 0.001;
@@ -112,7 +113,7 @@ http://opensource.org/licenses/mit-license.php
 				vec3 edge2 = v2 - v0;
 
 				float denominator =  det( edge1, edge2, invRay );
-				//if ( denominator == 0.0 ) return;
+				if ( denominator == 0.0 ) return;
 
 				float invDenominator = 1.0 / denominator;
 				vec3 d = origin - v0;
@@ -225,6 +226,8 @@ http://opensource.org/licenses/mit-license.php
 
 			void main(void) {
 
+				// calc consts
+				invRefractiveIndex = 1.0 / refractiveIndex;
 				frag = 1.0 / float( VERTEX_TEXTURE_WIDTH );
 				texShift = 0.5 * frag;
 
@@ -252,9 +255,7 @@ http://opensource.org/licenses/mit-license.php
 
 					if ( nearest.material == DIAMOND_MATERIAL ) {
 
-						float eta = refractiveIndex;
-						if ( nearest.isFront ) eta = 1.0 / eta;
-						ray = refract( ray, nearest.normal, eta );
+						ray = refract( ray, nearest.normal, nearest.isFront ? invRefractiveIndex : refractiveIndex );
 						cPos = nearest.position - nearest.normal * EPS;
 
 						if ( ray == vec3( 0.0 ) ) {
@@ -263,7 +264,6 @@ http://opensource.org/licenses/mit-license.php
 							cPos = nearest.position + nearest.normal * EPS;
 
 						}
-
 
 					}
 
