@@ -96,7 +96,7 @@ http://opensource.org/licenses/mit-license.php
 			struct Plane {
 				vec3 position;
 				vec3 normal;
-				vec3 color;
+				//vec3 color;
 			};
 
 			const int DIAMOND_MATERIAL = 0;
@@ -143,11 +143,11 @@ http://opensource.org/licenses/mit-license.php
 				float t = -( dot( origin, plane.normal ) + d ) / v;
 				if( t > 0.0 && t < nearest.distance ) {
 
-					nearest.isHit = true;
+					nearest.isHit    = true;
 					nearest.position = origin + ray * t;
-					nearest.normal = plane.normal;
+					nearest.normal   = plane.normal;
 					nearest.distance = t;
-					nearest.color = vec3( 1.0 );
+					//nearest.color  = plane.color;
 					nearest.material = FLOOR_MATERIAL;
 
 				}
@@ -163,8 +163,8 @@ http://opensource.org/licenses/mit-license.php
 				// Plane
 				Plane plane;
 				plane.position = vec3( 0.0, 0.0, 0.0 );
-				plane.normal = vec3( 0.0, 1.0, 0.0 );
-				plane.color = vec3(1.0);
+				plane.normal   = vec3( 0.0, 1.0, 0.0 );
+				//plane.color = vec3(1.0);
 				rayIntersectPlane( origin, ray, plane, nearest );
 
 				float pu = texShift;
