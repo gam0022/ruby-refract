@@ -154,9 +154,8 @@ http://opensource.org/licenses/mit-license.php
 
 			}
 
-			Intersect getRayColor( vec3 origin, vec3 ray) {
+			void getRayColor( vec3 origin, vec3 ray, inout Intersect nearest ) {
 
-				Intersect nearest;
 				nearest.isHit = false;
 				nearest.distance = 1.0e+30;
 
@@ -210,7 +209,7 @@ http://opensource.org/licenses/mit-license.php
 						float m = mod( nearest.position.x, 2.0 );
 						float n = mod( nearest.position.z, 2.0 );
 						if ( ( m > 1.0 && n > 1.0 ) || ( m < 1.0 && n < 1.0 ) ) d *= 0.1;
-						nearest.color *= d;
+						nearest.color = vec3( d );
 
 					}
 
@@ -221,9 +220,6 @@ http://opensource.org/licenses/mit-license.php
 					nearest.color = vec3( 0.0 );
 
 				}
-
-
-				return nearest;
 
 			}
 
@@ -249,7 +245,7 @@ http://opensource.org/licenses/mit-license.php
 
 				for ( int i = 0; i < 5; i++ ) {
 
-					nearest = getRayColor( cPos, ray );
+					getRayColor( cPos, ray, nearest );
 					color += clamp( nearest.color, 0.0, 1.0 ) * alpha;
 
 					alpha *= 0.99;
