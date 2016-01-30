@@ -323,8 +323,6 @@ http://opensource.org/licenses/mit-license.php
 			var canvas;
 			var stats;
 
-			var clock = new THREE.Clock();
-
 			var config = {
 				saveImage: function() {
 
@@ -332,7 +330,7 @@ http://opensource.org/licenses/mit-license.php
 					window.open( canvas.toDataURL() );
 
 				},
-				freeCamera: false,
+				autoCamera: false,
 				gammaCorrection: false,
 				refractiveIndex: 1.42,
 
@@ -417,10 +415,11 @@ http://opensource.org/licenses/mit-license.php
 				controls.enableDamping = true;
 				controls.dampingFactor = 0.15;
 				controls.enableZoom = true;
+				controls.target = new THREE.Vector3( 0, 0.7, 0 );
 
 				var gui = new dat.GUI();
 				gui.add( config, 'saveImage' ).name( 'Save Image' );
-				gui.add( config, 'freeCamera' ).name( 'Free Camera' );
+				gui.add( config, 'autoCamera' ).name( 'Auto Camera' );
 				gui.add( config, 'gammaCorrection' ).name( 'Gamma Correction' );
 				gui.add( config, 'diamond', [
 					'round_brilliant',
@@ -544,20 +543,20 @@ http://opensource.org/licenses/mit-license.php
 
 			function render( timestamp ) {
 
-				var delta = clock.getDelta();
-
 				stats.begin();
 
-				if ( config.freeCamera ) {
-
-					controls.update( delta );
-
-				} else {
+				if ( config.autoCamera ) {
 
 					var rad = 0.0004 * timestamp;
 					var h = Math.cos( rad * 1.5 );
 					camera.position.set( ( 1.3 - h ) * Math.cos( rad ), 2.0 + h, ( 2.0 - h ) * Math.sin( rad ) );
 					camera.lookAt( new THREE.Vector3( 0, 1, 0 ) );
+
+					controls.update();
+
+				} else {
+
+					controls.update();
 
 				}
 
