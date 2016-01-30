@@ -58,6 +58,8 @@ http://opensource.org/licenses/mit-license.php
 			float frag;
 			float texShift;
 
+			vec3 lightDir;
+
 			uniform int diamondFaceCount;
 			uniform sampler2D diamondVertexTexture;
 
@@ -71,12 +73,6 @@ http://opensource.org/licenses/mit-license.php
 
 			uniform vec3 diamondDiffuseColor;
 			uniform vec3 diamondSpecularColor;
-
-			// 上方向からの光源
-			const vec3 lightDir1 = vec3( 0.48666426339228763, 0.3244428422615251, 0.8111071056538127 );
-			// 下方向からの光源
-			const vec3 lightDir2 = vec3( -0.48666426339228763, -0.3244428422615251, -0.8111071056538127 );
-
 
 			float det( vec3 a, vec3 b, vec3 c ) {
 				return (a.x * b.y * c.z)
@@ -190,13 +186,9 @@ http://opensource.org/licenses/mit-license.php
 
 					if ( nearest.material == DIAMOND_MATERIAL ) {
 
-						float diffuse1 = clamp( dot( lightDir1, nearest.normal ), 0.1, 1.0 );
-						float diffuse2 = clamp( dot( lightDir2, nearest.normal ), 0.1, 1.0 );
-						nearest.color = diamondDiffuseColor * clamp( diffuse1 + diffuse2, 0.0, 1.0 );
-
-						float specular1 = pow( clamp( dot( reflect( lightDir1, nearest.normal ), ray ), 0.0, 1.0 ), 100.0 );
-						float specular2 = pow( clamp( dot( reflect( lightDir2, nearest.normal ), ray ), 0.0, 1.0 ), 100.0 );
-						nearest.color += diamondSpecularColor * clamp( specular1 + specular2, 0.0, 1.0 );
+						float diffuse = abs( dot( lightDir, nearest.normal ) );
+						float specular = pow( abs( dot( reflect( lightDir, nearest.normal ), ray ) ), 100.0 );
+						nearest.color = diamondDiffuseColor * diffuse + diamondSpecularColor * specular;
 
 					}
 
@@ -204,7 +196,7 @@ http://opensource.org/licenses/mit-license.php
 
 						float m = mod( nearest.position.x, 2.0 );
 						float n = mod( nearest.position.z, 2.0 );
-						nearest.color = ( ( m > 1.0 && n > 1.0 ) || ( m < 1.0 && n < 1.0 ) ) ? vec3( 0.04 ) : vec3( 0.4 ) ;
+						nearest.color = ( ( m > 1.0 && n > 1.0 ) || ( m < 1.0 && n < 1.0 ) ) ? vec3( 0.5 ) : vec3( 0.05 ) ;
 
 					}
 
@@ -221,10 +213,11 @@ http://opensource.org/licenses/mit-license.php
 			void main(void) {
 
 				// calc consts
-				invRefractiveIndex = 1.0 / refractiveIndex;
+
 				frag = 1.0 / float( VERTEX_TEXTURE_WIDTH );
 				texShift = 0.5 * frag;
 
+				lightDir = normalize( vec3(  2,  1,  2 ) );
 
 				invRefractiveIndex = 1.0 / refractiveIndex;
 
@@ -332,8 +325,8 @@ http://opensource.org/licenses/mit-license.php
 				refractiveIndex: 1.42,
 
 				diamond: 'round_brilliant',
-				diamondDiffuseColor:  "#590606",
-				diamondSpecularColor: "#ff6666",
+				diamondDiffuseColor:  "#912424",
+				diamondSpecularColor: "#ff3e3e",
 
 				resolution: '256',
 			};
