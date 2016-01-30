@@ -435,7 +435,7 @@ http://opensource.org/licenses/mit-license.php
 							},
 							"Emerald": {
 								"0": {
-									"autoCamera": false,
+									"autoCamera": true,
 									"gammaCorrection": false,
 									"diamond": "barion",
 									"diamondDiffuseColor": "#065914",
@@ -454,6 +454,17 @@ http://opensource.org/licenses/mit-license.php
 									"refractiveIndex": 1.4,
 									"resolution": "256"
 								}
+							},
+							"Ramiel": {
+								"0": {
+									"autoCamera": false,
+									"gammaCorrection": false,
+									"diamond": "octahedron",
+									"diamondDiffuseColor": "#0c0255",
+									"diamondSpecularColor": "#a2b8ff",
+									"refractiveIndex": 1.1,
+									"resolution": "256"
+								}
 							}
 						},
 						"folders": {}
@@ -468,7 +479,7 @@ http://opensource.org/licenses/mit-license.php
 				gui.add( config, 'diamond', [
 					'round_brilliant',
 					'round_brilliant2',
-					'regular_octahedron',
+					'octahedron',
 					'barion',
 					'oval_brilliant',
 					'asscher',
