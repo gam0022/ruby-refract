@@ -417,7 +417,51 @@ http://opensource.org/licenses/mit-license.php
 				controls.enableZoom = true;
 				controls.target = new THREE.Vector3( 0, 0.7, 0 );
 
-				var gui = new dat.GUI();
+				var gui = new dat.GUI({
+					load: {
+						"preset": "Ruby",
+						"closed": false,
+						"remembered": {
+							"Ruby": {
+								"0": {
+									"autoCamera": false,
+									"gammaCorrection": false,
+									"diamond": "round_brilliant",
+									"diamondDiffuseColor": "#590606",
+									"diamondSpecularColor": "#ff6666",
+									"refractiveIndex": 1.42,
+									"resolution": "256"
+								}
+							},
+							"Emerald": {
+								"0": {
+									"autoCamera": false,
+									"gammaCorrection": false,
+									"diamond": "barion",
+									"diamondDiffuseColor": "#065914",
+									"diamondSpecularColor": "#93ff93",
+									"refractiveIndex": 1.3656227239621275,
+									"resolution": "256"
+								}
+							},
+							"Topaz": {
+								"0": {
+									"autoCamera": false,
+									"gammaCorrection": false,
+									"diamond": "oval_brilliant",
+									"diamondDiffuseColor": "#554b05",
+									"diamondSpecularColor": "#ff7800",
+									"refractiveIndex": 1.4,
+									"resolution": "256"
+								}
+							}
+						},
+						"folders": {}
+					}
+				});
+
+				gui.remember( config );
+
 				gui.add( config, 'saveImage' ).name( 'Save Image' );
 				gui.add( config, 'autoCamera' ).name( 'Auto Camera' );
 				gui.add( config, 'gammaCorrection' ).name( 'Gamma Correction' );
