@@ -58,10 +58,7 @@ http://opensource.org/licenses/mit-license.php
 			float frag;
 			float texShift;
 
-			// 上方向からの光源
-			vec3 lightDir1;
-			// 下方向からの光源
-			vec3 lightDir2;
+			vec3 lightDir;
 
 			uniform int diamondFaceCount;
 			uniform sampler2D diamondVertexTexture;
@@ -189,13 +186,9 @@ http://opensource.org/licenses/mit-license.php
 
 					if ( nearest.material == DIAMOND_MATERIAL ) {
 
-						float diffuse1 = abs( dot( lightDir1, nearest.normal ) );
-						float diffuse2 = abs( dot( lightDir2, nearest.normal ) );
-						nearest.color = diamondDiffuseColor * ( diffuse1 + diffuse2 );
-
-						float specular1 = pow( abs( dot( reflect( lightDir1, nearest.normal ), ray ) ), 100.0 );
-						float specular2 = pow( abs( dot( reflect( lightDir2, nearest.normal ), ray ) ), 100.0 );
-						nearest.color += diamondSpecularColor * ( specular1 + specular2 );
+						float diffuse = abs( dot( lightDir, nearest.normal ) );
+						float specular = pow( abs( dot( reflect( lightDir, nearest.normal ), ray ) ), 100.0 );
+						nearest.color = diamondDiffuseColor * diffuse + diamondSpecularColor * specular;
 
 					}
 
@@ -226,8 +219,7 @@ http://opensource.org/licenses/mit-license.php
 				frag = 1.0 / float( VERTEX_TEXTURE_WIDTH );
 				texShift = 0.5 * frag;
 
-				lightDir1 = normalize( vec3(  2,  1,  2 ) );
-				lightDir2 = normalize( vec3( -2, -1, -3 ) );
+				lightDir = normalize( vec3(  2,  1,  2 ) );
 
 				invRefractiveIndex = 1.0 / refractiveIndex;
 
@@ -335,7 +327,7 @@ http://opensource.org/licenses/mit-license.php
 				refractiveIndex: 1.42,
 
 				diamond: 'round_brilliant',
-				diamondDiffuseColor:  "#460404",
+				diamondDiffuseColor:  "#912424",
 				diamondSpecularColor: "#ff3e3e",
 
 				resolution: '256',
@@ -426,10 +418,10 @@ http://opensource.org/licenses/mit-license.php
 								"0": {
 									"autoCamera": false,
 									"gammaCorrection": false,
-									"diamond": "round_brilliant",
-									"diamondDiffuseColor": "#460404",
-									"diamondSpecularColor": "#ff3e3e",
-									"refractiveIndex": 1.42,
+									"diamond": config.diamond,
+									"diamondDiffuseColor": config.diamondDiffuseColor,
+									"diamondSpecularColor": config.diamondSpecularColor,
+									"refractiveIndex": config.refractiveIndex,
 									"resolution": "256"
 								}
 							},
@@ -438,9 +430,9 @@ http://opensource.org/licenses/mit-license.php
 									"autoCamera": true,
 									"gammaCorrection": false,
 									"diamond": "barion",
-									"diamondDiffuseColor": "#065914",
+									"diamondDiffuseColor": "#007513",
 									"diamondSpecularColor": "#93ff93",
-									"refractiveIndex": 1.3656227239621275,
+									"refractiveIndex": 1.36,
 									"resolution": "256"
 								}
 							},
@@ -449,8 +441,8 @@ http://opensource.org/licenses/mit-license.php
 									"autoCamera": false,
 									"gammaCorrection": false,
 									"diamond": "oval_brilliant",
-									"diamondDiffuseColor": "#554b05",
-									"diamondSpecularColor": "#ff7800",
+									"diamondDiffuseColor": "#7f710f",
+									"diamondSpecularColor": "#ff6800",
 									"refractiveIndex": 1.4,
 									"resolution": "256"
 								}
@@ -460,7 +452,7 @@ http://opensource.org/licenses/mit-license.php
 									"autoCamera": false,
 									"gammaCorrection": false,
 									"diamond": "octahedron",
-									"diamondDiffuseColor": "#0c0255",
+									"diamondDiffuseColor": "#15058c",
 									"diamondSpecularColor": "#a2b8ff",
 									"refractiveIndex": 1.1,
 									"resolution": "256"
