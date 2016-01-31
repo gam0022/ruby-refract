@@ -94,12 +94,6 @@ http://opensource.org/licenses/mit-license.php
 				vec3 color;
 			};
 
-			struct Plane {
-				vec3 position;
-				vec3 normal;
-				//vec3 color;
-			};
-
 			void rayIntersectsTriangle( vec3 origin, vec3 ray, vec3 v0, vec3 edge1, vec3 edge2, vec3 normal, inout Intersect nearest ) {
 
 				vec3 invRay = -ray;
@@ -129,16 +123,16 @@ http://opensource.org/licenses/mit-license.php
 				
 			}
 
-			void rayIntersectPlane( vec3 origin, vec3 ray, Plane plane, inout Intersect nearest ) {
+			void rayIntersectFloor( vec3 origin, vec3 ray, inout Intersect nearest ) {
 
-				float d = -dot( plane.position, plane.normal );
-				float v = dot( ray, plane.normal );
-				float t = -( dot( origin, plane.normal ) + d ) / v;
+				const vec3 normal = vec3( 0, 1, 0 );
+				float v = dot( ray, normal );
+				float t = dot( origin, -normal ) / v;
 				if( t > 0.0 && t < nearest.distance ) {
 
 					nearest.isHit    = true;
 					nearest.position = origin + ray * t;
-					nearest.normal   = plane.normal;
+					nearest.normal   = normal;
 					nearest.distance = t;
 					//nearest.color  = plane.color;
 					nearest.material = FLOOR_MATERIAL;
@@ -151,13 +145,6 @@ http://opensource.org/licenses/mit-license.php
 
 				nearest.isHit = false;
 				nearest.distance = 1.0e+30;
-
-				// Plane
-				Plane plane;
-				plane.position = vec3( 0.0, 0.0, 0.0 );
-				plane.normal   = vec3( 0.0, 1.0, 0.0 );
-				//plane.color = vec3(1.0);
-				rayIntersectPlane( origin, ray, plane, nearest );
 
 				float pu = texShift;
 				float pv = 0.5;
@@ -179,6 +166,9 @@ http://opensource.org/licenses/mit-license.php
 					rayIntersectsTriangle( origin, ray, a.xyz, b.xyz, c.xyz, vec3( a.a, b.a, c.a ), nearest );
 
 				}
+
+				// Plane
+				rayIntersectFloor( origin, ray, nearest );
 
 				if ( nearest.isHit ) {
 
