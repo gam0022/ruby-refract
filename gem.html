@@ -331,8 +331,7 @@ http://opensource.org/licenses/mit-license.php
 
 				},
 
-				autoRotate: true,
-				autoCamera: false,
+				camera: 'Auto Rotate',
 				gammaCorrection: false,
 				refractiveIndex: 1.42,
 
@@ -419,7 +418,7 @@ http://opensource.org/licenses/mit-license.php
 				controls.enableZoom = true;
 				controls.rotateSpeed = 0.2;
 
-				controls.autoRotate = true;
+				controls.autoRotate = ( config.camera === 'Auto Rotate' );
 				controls.autoRotateSpeed = 0.8;
 
 				controls.target = new THREE.Vector3( 0, 0.7, 0 );
@@ -431,8 +430,7 @@ http://opensource.org/licenses/mit-license.php
 						"remembered": {
 							"Ruby": {
 								"0": {
-									"autoRotate": config.autoRotate,
-									"autoCamera": config.autoCamera,
+									"camera": config.camera,
 									"gammaCorrection": config.gammaCorrection,
 									"diamond": config.diamond,
 									"diamondDiffuseColor": config.diamondDiffuseColor,
@@ -443,8 +441,7 @@ http://opensource.org/licenses/mit-license.php
 							},
 							"Emerald": {
 								"0": {
-									"autoRotate": false,
-									"autoCamera": true,
+									"camera": "Auto",
 									"gammaCorrection": false,
 									"diamond": "barion",
 									"diamondDiffuseColor": "#065914",
@@ -455,8 +452,7 @@ http://opensource.org/licenses/mit-license.php
 							},
 							"Topaz": {
 								"0": {
-									"autoRotate": true,
-									"autoCamera": false,
+									"camera": "Auto Rotate",
 									"gammaCorrection": false,
 									"diamond": "oval_brilliant",
 									"diamondDiffuseColor": "#554b05",
@@ -467,8 +463,7 @@ http://opensource.org/licenses/mit-license.php
 							},
 							"Ramiel": {
 								"0": {
-									"autoRotate": true,
-									"autoCamera": false,
+									"camera": "Auto Rotate",
 									"gammaCorrection": false,
 									"diamond": "octahedron",
 									"diamondDiffuseColor": "#0c0255",
@@ -486,13 +481,11 @@ http://opensource.org/licenses/mit-license.php
 
 				gui.add( config, 'saveImage' ).name( 'Save Image' );
 
-				gui.add( config, 'autoRotate' ).name( 'Auto Rotate' ).onChange( function( value ) {
+				gui.add( config, 'camera', [ 'Manual', 'Auto Rotate', 'Auto' ] ).name( 'Camera' ).onChange( function( value ) {
 
-					controls.autoRotate = value;
+					controls.autoRotate = ( value === 'Auto Rotate' );
 
 				} );
-
-				gui.add( config, 'autoCamera' ).name( 'Auto Camera' );
 
 				gui.add( config, 'gammaCorrection' ).name( 'Gamma Correction' );
 				gui.add( config, 'diamond', [
@@ -619,7 +612,7 @@ http://opensource.org/licenses/mit-license.php
 
 				stats.begin();
 
-				if ( config.autoCamera ) {
+				if ( config.camera === 'Auto' ) {
 
 					var rad = 0.0004 * timestamp;
 					var h = Math.cos( rad * 1.5 );
