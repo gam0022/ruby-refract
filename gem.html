@@ -50,16 +50,7 @@ http://opensource.org/licenses/mit-license.php
 
 			precision highp float;
 
-			const float EPS = 0.001;
-
-			const int DIAMOND_MATERIAL = 0;
-			const int FLOOR_MATERIAL = 1;
-
-			float frag;
-			float texShift;
-
-			vec3 lightDir;
-
+			//uniform vec3 diamondVertexes[ diamondFaceCount * 3 ];
 			uniform int diamondFaceCount;
 			uniform sampler2D diamondVertexTexture;
 
@@ -71,8 +62,17 @@ http://opensource.org/licenses/mit-license.php
 			float invRefractiveIndex;
 			uniform vec2 resolution;
 
+			const float EPS = 0.001;
+
 			uniform vec3 diamondDiffuseColor;
 			uniform vec3 diamondSpecularColor;
+
+			// 上方向からの光源
+			const vec3 lightDir1 = vec3( 0.48666426339228763, 0.3244428422615251, 0.8111071056538127 );
+
+			// 下方向からの光源
+			const vec3 lightDir2 = vec3( -0.48666426339228763, -0.3244428422615251, -0.8111071056538127 );
+
 
 			float det( vec3 a, vec3 b, vec3 c ) {
 				return (a.x * b.y * c.z)
@@ -94,9 +94,23 @@ http://opensource.org/licenses/mit-license.php
 				vec3 color;
 			};
 
-			void rayIntersectsTriangle( vec3 origin, vec3 ray, vec3 v0, vec3 edge1, vec3 edge2, vec3 normal, inout Intersect nearest ) {
+			struct Plane {
+				vec3 position;
+				vec3 normal;
+				//vec3 color;
+			};
+
+			const int DIAMOND_MATERIAL = 0;
+			const int FLOOR_MATERIAL = 1;
+
+			float frag;
+			float texShift;
+
+			void rayIntersectsTriangle( vec3 origin, vec3 ray, vec3 v0, vec3 v1, vec3 v2, inout Intersect nearest ) {
 
 				vec3 invRay = -ray;
+				vec3 edge1 = v1 - v0;
+				vec3 edge2 = v2 - v0;
 
 				float denominator =  det( edge1, edge2, invRay );
 				if ( denominator == 0.0 ) return;
@@ -116,23 +130,23 @@ http://opensource.org/licenses/mit-license.php
 				nearest.isHit    = true;
 				nearest.position = origin + ray * t;
 				nearest.distance = t;
-				nearest.normal   = normal * sign( invDenominator );
+				nearest.normal   = normalize( cross( edge1, edge2 ) ) * sign( invDenominator );
 				nearest.material = DIAMOND_MATERIAL;
 				//nearest.color  = diamondDiffuseColor;
 				nearest.isFront  = invDenominator > 0.0;
 				
 			}
 
-			void rayIntersectFloor( vec3 origin, vec3 ray, inout Intersect nearest ) {
+			void rayIntersectPlane( vec3 origin, vec3 ray, Plane plane, inout Intersect nearest ) {
 
-				const vec3 normal = vec3( 0, 1, 0 );
-				float v = dot( ray, normal );
-				float t = dot( origin, -normal ) / v;
+				float d = -dot( plane.position, plane.normal );
+				float v = dot( ray, plane.normal );
+				float t = -( dot( origin, plane.normal ) + d ) / v;
 				if( t > 0.0 && t < nearest.distance ) {
 
 					nearest.isHit    = true;
 					nearest.position = origin + ray * t;
-					nearest.normal   = normal;
+					nearest.normal   = plane.normal;
 					nearest.distance = t;
 					//nearest.color  = plane.color;
 					nearest.material = FLOOR_MATERIAL;
@@ -146,6 +160,13 @@ http://opensource.org/licenses/mit-license.php
 				nearest.isHit = false;
 				nearest.distance = 1.0e+30;
 
+				// Plane
+				Plane plane;
+				plane.position = vec3( 0.0, 0.0, 0.0 );
+				plane.normal   = vec3( 0.0, 1.0, 0.0 );
+				//plane.color = vec3(1.0);
+				rayIntersectPlane( origin, ray, plane, nearest );
+
 				float pu = texShift;
 				float pv = 0.5;
 
@@ -154,37 +175,42 @@ http://opensource.org/licenses/mit-license.php
 
 					if ( i >= diamondFaceCount ) break;
 
-					vec4 a = texture2D( diamondVertexTexture, vec2( pu, pv ) );
+					vec3 v0 = texture2D( diamondVertexTexture, vec2( pu, pv ) ).xyz;
 					pu += frag;
 
-					vec4 b = texture2D( diamondVertexTexture, vec2( pu, pv ) );
+					vec3 v1 = texture2D( diamondVertexTexture, vec2( pu, pv ) ).xyz;
 					pu += frag;
 
-					vec4 c = texture2D( diamondVertexTexture, vec2( pu, pv ) );
+					vec3 v2 = texture2D( diamondVertexTexture, vec2( pu, pv ) ).xyz;
 					pu += frag;
 
-					rayIntersectsTriangle( origin, ray, a.xyz, b.xyz, c.xyz, vec3( a.a, b.a, c.a ), nearest );
+					rayIntersectsTriangle( origin, ray, v0, v1, v2, nearest );
 
 				}
-
-				// Plane
-				rayIntersectFloor( origin, ray, nearest );
 
 				if ( nearest.isHit ) {
 
 					if ( nearest.material == DIAMOND_MATERIAL ) {
 
-						float diffuse = abs( dot( lightDir, nearest.normal ) );
-						float specular = pow( abs( dot( reflect( lightDir, nearest.normal ), ray ) ), 100.0 );
-						nearest.color = diamondDiffuseColor * diffuse + diamondSpecularColor * specular;
+						float diffuse1 = clamp( dot( lightDir1, nearest.normal ), 0.1, 1.0 );
+						float diffuse2 = clamp( dot( lightDir2, nearest.normal ), 0.1, 1.0 );
+						nearest.color = diamondDiffuseColor * clamp( diffuse1 + diffuse2, 0.0, 1.0 );
+
+						float specular1 = pow( clamp( dot( reflect( lightDir1, nearest.normal ), ray ), 0.0, 1.0 ), 100.0 );
+						float specular2 = pow( clamp( dot( reflect( lightDir2, nearest.normal ), ray ), 0.0, 1.0 ), 100.0 );
+						nearest.color += diamondSpecularColor * clamp( specular1 + specular2, 0.0, 1.0 );
 
 					}
 
 					if ( nearest.material == FLOOR_MATERIAL ) {
 
+						float diffuse1 = clamp( dot( nearest.normal, lightDir1 ), 0.1, 1.0 );
+						float diffuse2 = clamp( dot( nearest.normal, lightDir2 ), 0.1, 1.0 );
+						float d = diffuse1 + diffuse2;
 						float m = mod( nearest.position.x, 2.0 );
 						float n = mod( nearest.position.z, 2.0 );
-						nearest.color = ( ( m > 1.0 && n > 1.0 ) || ( m < 1.0 && n < 1.0 ) ) ? vec3( 0.04 ) : vec3( 0.4 ) ;
+						if ( ( m > 1.0 && n > 1.0 ) || ( m < 1.0 && n < 1.0 ) ) d *= 0.1;
+						nearest.color = vec3( d );
 
 					}
 
@@ -201,14 +227,9 @@ http://opensource.org/licenses/mit-license.php
 			void main(void) {
 
 				// calc consts
-
+				invRefractiveIndex = 1.0 / refractiveIndex;
 				frag = 1.0 / float( VERTEX_TEXTURE_WIDTH );
 				texShift = 0.5 * frag;
-
-				lightDir = normalize( vec3(  4,  3,  7 ) );
-				//lightDir = vec3( 0.48666426339228763, 0.3244428422615251, 0.8111071056538127 );
-
-				invRefractiveIndex = 1.0 / refractiveIndex;
 
 				// fragment position
 				vec2 p = ( gl_FragCoord.xy * 2.0 - resolution ) / min( resolution.x, resolution.y );
@@ -314,8 +335,8 @@ http://opensource.org/licenses/mit-license.php
 				refractiveIndex: 1.42,
 
 				diamond: 'round_brilliant',
-				diamondDiffuseColor:  "#7f1515",
-				diamondSpecularColor: "#ff6969",
+				diamondDiffuseColor:  "#590606",
+				diamondSpecularColor: "#ff6666",
 
 				resolution: '256',
 			};
@@ -405,10 +426,10 @@ http://opensource.org/licenses/mit-license.php
 								"0": {
 									"autoCamera": false,
 									"gammaCorrection": false,
-									"diamond": config.diamond,
-									"diamondDiffuseColor": config.diamondDiffuseColor,
-									"diamondSpecularColor": config.diamondSpecularColor,
-									"refractiveIndex": config.refractiveIndex,
+									"diamond": "round_brilliant",
+									"diamondDiffuseColor": "#590606",
+									"diamondSpecularColor": "#ff6666",
+									"refractiveIndex": 1.42,
 									"resolution": "256"
 								}
 							},
@@ -417,9 +438,9 @@ http://opensource.org/licenses/mit-license.php
 									"autoCamera": true,
 									"gammaCorrection": false,
 									"diamond": "barion",
-									"diamondDiffuseColor": "#007513",
+									"diamondDiffuseColor": "#065914",
 									"diamondSpecularColor": "#93ff93",
-									"refractiveIndex": 1.36,
+									"refractiveIndex": 1.3656227239621275,
 									"resolution": "256"
 								}
 							},
@@ -428,8 +449,8 @@ http://opensource.org/licenses/mit-license.php
 									"autoCamera": false,
 									"gammaCorrection": false,
 									"diamond": "oval_brilliant",
-									"diamondDiffuseColor": "#7f710f",
-									"diamondSpecularColor": "#ff6800",
+									"diamondDiffuseColor": "#554b05",
+									"diamondSpecularColor": "#ff7800",
 									"refractiveIndex": 1.4,
 									"resolution": "256"
 								}
@@ -439,7 +460,7 @@ http://opensource.org/licenses/mit-license.php
 									"autoCamera": false,
 									"gammaCorrection": false,
 									"diamond": "octahedron",
-									"diamondDiffuseColor": "#15058c",
+									"diamondDiffuseColor": "#0c0255",
 									"diamondSpecularColor": "#a2b8ff",
 									"refractiveIndex": 1.1,
 									"resolution": "256"
@@ -528,7 +549,6 @@ http://opensource.org/licenses/mit-license.php
 
 					var bufferGeometry = object.children[0].geometry;
 					var diamondGeometry = new THREE.Geometry().fromBufferGeometry( bufferGeometry );
-					console.log( diamondGeometry );
 					var faces = diamondGeometry.faces;
 					var vertices = diamondGeometry.vertices;
 
@@ -548,18 +568,17 @@ http://opensource.org/licenses/mit-license.php
 						diamondVertexes[ i * 12      ]  = a.x;
 						diamondVertexes[ i * 12 + 1  ]  = a.y;
 						diamondVertexes[ i * 12 + 2  ]  = a.z;
-						diamondVertexes[ i * 12 + 3  ]  = face.normal.x;
+						diamondVertexes[ i * 12 + 3  ]  = 1.0;
 
-						diamondVertexes[ i * 12 + 4  ]  = b.x - a.x;
-						diamondVertexes[ i * 12 + 5  ]  = b.y - a.y;
-						diamondVertexes[ i * 12 + 6  ]  = b.z - a.z;
-						diamondVertexes[ i * 12 + 7  ]  = face.normal.y;
+						diamondVertexes[ i * 12 + 4  ]  = b.x;
+						diamondVertexes[ i * 12 + 5  ]  = b.y;
+						diamondVertexes[ i * 12 + 6  ]  = b.z;
+						diamondVertexes[ i * 12 + 7  ]  = 1.0;
 
-						diamondVertexes[ i * 12 + 8  ]  = c.x - a.x;
-						diamondVertexes[ i * 12 + 9  ]  = c.y - a.y;
-						diamondVertexes[ i * 12 + 10 ]  = c.z - a.z;
-						diamondVertexes[ i * 12 + 11 ]  = face.normal.z;
-
+						diamondVertexes[ i * 12 + 8  ]  = c.x;
+						diamondVertexes[ i * 12 + 9  ]  = c.y;
+						diamondVertexes[ i * 12 + 10 ]  = c.z;
+						diamondVertexes[ i * 12 + 11 ]  = 1.0;
 					}
 
 					var vertexTexture = new THREE.DataTexture (
